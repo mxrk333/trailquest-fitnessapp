@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrailQuest - Login</title>
+    <!-- Font Awesome CDN for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-CjSjmrE0xCl8eyQcbGh3hX7E7oGTrpm1OGbRzPprVrVfZb3u0kKk+e+vkhQnY+j1X3XpYhX08uA8s0s4L3k7pQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Montserrat', sans-serif;
+      }
+
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Decorative background circles */
+      body::before,
+      body::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.1;
+      }
+
+      body::before {
+        width: 400px;
+        height: 400px;
+        background: #00d4ff;
+        top: -100px;
+        left: -100px;
+      }
+
+      body::after {
+        width: 300px;
+        height: 300px;
+        background: #ff00c8;
+        bottom: -50px;
+        right: -50px;
+      }
+
+      .login-container {
+        position: relative;
+        background-color: #1e1e1e;
+        padding: 50px 40px;
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        width: 380px;
+        text-align: center;
+        z-index: 1;
+        overflow: hidden;
+      }
+
+      .login-container h1 {
+        font-size: 2.2rem;
+        color: #00d4ff;
+        margin-bottom: 30px;
+        letter-spacing: 1px;
+      }
+
+      .login-container input {
+        width: 100%;
+        padding: 14px 20px;
+        margin: 12px 0;
+        border: none;
+        border-radius: 12px;
+        background-color: #2a2a2a;
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .login-container input:focus {
+        outline: none;
+        border: 2px solid #00d4ff;
+        background-color: #333;
+      }
+
+      .login-container button.login-btn {
+        width: 100%;
+        padding: 14px 0;
+        margin-top: 15px;
+        border: none;
+        border-radius: 12px;
+        background-color: #00d4ff;
+        color: #1e1e1e;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .login-container button.login-btn:hover {
+        background-color: #00b3cc;
+      }
+
+      .login-container .divider {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        color: #aaa;
+        font-size: 0.9rem;
+      }
+
+      .login-container .divider::before,
+      .login-container .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #444;
+        margin: 0 10px;
+      }
+
+      .login-container .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 12px 0;
+        margin: 10px 0;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .login-container .google-btn {
+        background-color: #fff;
+        color: #444;
+      }
+
+      .login-container .google-btn:hover {
+        background-color: #e0e0e0;
+      }
+
+      .login-container .apple-btn {
+        background-color: #000;
+        color: #fff;
+      }
+
+      .login-container .apple-btn:hover {
+        background-color: #333;
+      }
+
+      .login-container .social-btn i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+      }
+
+      .login-container a {
+        display: block;
+        margin-top: 15px;
+        font-size: 0.9rem;
+        color: #aaa;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .login-container a:hover {
+        color: #00d4ff;
+      }
+
+      @media (max-width: 400px) {
+        .login-container {
+          width: 90%;
+          padding: 40px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <h1>TrailQuest</h1>
+
+      <!-- Social login buttons -->
+      <div class="social-btn google-btn">
+        <i class="fa-brands fa-google"></i>
+        Continue with Google
+      </div>
+      <div class="social-btn apple-btn">
+        <i class="fa-brands fa-apple" style="color: #ffffff"></i>
+        Continue with Apple
+      </div>
+
+      <div class="divider">or</div>
+
+      <!-- Username / Password -->
+      <input type="text" placeholder="Username or Email" required />
+      <input type="password" placeholder="Password" required />
+      <button class="login-btn">Login</button>
+
+      <a href="#">Forgot your password?</a>
+      <a href="#">Create a new account</a>
+    </div>
+  </body>
+</html>
