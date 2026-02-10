@@ -1,247 +1,135 @@
-/**
- * =============================================================================
- * WELCOME TO THE HYTEL WAY: MONOREPO STACK
- * =============================================================================
- *
- * This file demonstrates the key concepts of our tech stack using friendly
- * analogies. Think of building a web app like putting on a theater production!
- *
- * THE STACK EXPLAINED (Theater Analogy):
- *
- * PNPM (Package Manager)
- *    -> "The super-organized prop master"
- *    -> Manages all the tools/packages we need, storing them efficiently
- *    -> Unlike npm, it doesn't duplicate packages - saves space!
- *
- * TURBOREPO (Monorepo Build System)
- *    -> "The stage manager who coordinates everything"
- *    -> Runs tasks (build, test, dev) across multiple packages smartly
- *    -> Caches results so repeated tasks are lightning fast!
- *
- * REACT + VITE (Frontend Framework + Build Tool)
- *    -> "The stage and lighting system"
- *    -> React: Builds the interactive UI (the actors on stage)
- *    -> Vite: Super-fast dev server (instant lighting changes!)
- *
- * TAILWIND CSS + SHADCN UI (Styling)
- *    -> "The costume designer"
- *    -> Tailwind: Utility classes for quick styling (fabric swatches)
- *    -> Shadcn UI: Pre-made, beautiful component patterns (costume templates)
- *
- * @repo/ui (Shared Component Package)
- *    -> "The shared costume closet"
- *    -> Components here (Header, Button, Card) can be used by ANY app!
- *    -> Located in: packages/ui/
- *
- * @repo/shared (Shared Types & Schemas)
- *    -> "The spellbook of shared rules"
- *    -> Zod schemas define what data looks like (validation spells!)
- *    -> Located in: packages/shared/
- *
- * tRPC + TanStack Query (API Layer)
- *    -> "The messenger system between actors"
- *    -> tRPC: Type-safe communication with backend (no lost messages!)
- *    -> TanStack Query: Smart caching of server data (remembers the script!)
- *
- * =============================================================================
- */
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './providers/AuthProvider'
+import { ProtectedRoute } from './components/layout/ProtectedRoute'
+import { PublicRoute } from './components/layout/PublicRoute'
+import { LoginForm } from './components/auth/LoginForm'
+import { SignUpForm } from './components/auth/SignUpForm'
+import { Onboarding } from './pages/onboarding/Onboarding'
+import { testFirestoreConnection } from './services/firestore/test.service'
+import { useEffect, useState } from 'react'
 
-import { useState } from 'react'
-import './style.css'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { Button } from '@repo/ui'
 
-// Importing from @repo/ui - the "shared component closet"
-// These components live in packages/ui/ and can be used by any app!
-import { Header } from '@repo/ui/Header'
-import { Button } from '@repo/ui/Button'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@repo/ui/Card'
+function Home() {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
-// Assets
-import viteLogo from '/vite.svg'
-import reactLogo from '/react.svg'
+  useEffect(() => {
+    const checkConnection = async () => {
+      setStatus('loading')
+      const result = await testFirestoreConnection()
+      setStatus(result ? 'success' : 'error')
+    }
+    checkConnection()
+  }, [])
 
-/**
- * Main App Component
- *
- * This is the "main stage" of our application. Everything you see
- * in the browser starts here!
- */
-export function App() {
-  // React State - like a scoreboard that updates the display automatically
-  const [count, setCount] = useState(0)
+  const handleLogout = async () => {
+    await signOut(auth)
+  }
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      {/* 
-        Header Component from @repo/ui
-        This comes from our shared "costume closet" (packages/ui)
-        Any app in the monorepo can use this same Header!
-      */}
-      <Header title="The Hytel Way" />
-
-      {/* Logo Section */}
-      <div className="flex justify-center gap-8 my-8">
-        <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noopener noreferrer">
-          <img src={reactLogo} className="logo" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <Button onClick={handleLogout} variant="destructive">
+          Sign Out
+        </Button>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="max-w-4xl mx-auto grid gap-6 md:grid-cols-2">
-        {/* 
-          Interactive Counter Card
-          Demonstrates React state + Shadcn UI components
-        */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Interactive Counter</CardTitle>
-            <CardDescription>
-              Click the buttons to change the count. This demonstrates React state management - when
-              count changes, the UI updates automatically!
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-6xl font-bold text-primary mb-6">{count}</p>
-              <div className="flex justify-center gap-4">
-                {/* 
-                  Shadcn UI Buttons
-                  These come from packages/ui/components/ui/button.tsx
-                  The "variant" prop changes the button style (like costume options!)
-                */}
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setCount(c => c - 1)}
-                  aria-label="Decrement counter"
-                >
-                  - Decrease
-                </Button>
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={() => setCount(c => c + 1)}
-                  aria-label="Increment counter"
-                >
-                  + Increase
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="justify-center">
-            <Button variant="ghost" onClick={() => setCount(0)}>
-              Reset to Zero
-            </Button>
-          </CardFooter>
-        </Card>
+      <div className="max-w-md w-full text-center space-y-8">
+        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent animate-pulse">
+          TrailQuest
+        </h1>
 
-        {/* 
-          Stack Info Card
-          Educational content about the monorepo structure
-        */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Stack Overview</CardTitle>
-            <CardDescription>
-              What powers this template? Here's the cast of characters!
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex items-start gap-2">
-              <div>
-                <strong>pnpm</strong> - Fast, disk-efficient package manager
-              </div>
+        <div
+          className={`p-6 rounded-2xl border transition-all duration-500 ${
+            status === 'loading'
+              ? 'border-blue-500/30 bg-blue-500/10'
+              : status === 'success'
+                ? 'border-green-500/30 bg-green-500/10'
+                : status === 'error'
+                  ? 'border-red-500/30 bg-red-500/10'
+                  : 'border-gray-800'
+          }`}
+        >
+          {status === 'loading' && (
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-blue-400 font-medium">Connecting to Firestore...</span>
             </div>
-            <div className="flex items-start gap-2">
-              <div>
-                <strong>Turborepo</strong> - Smart monorepo build system
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div>
-                <strong>React + Vite</strong> - Fast UI development
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div>
-                <strong>Tailwind + Shadcn</strong> - Beautiful styling
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div>
-                <strong>tRPC</strong> - Type-safe API layer
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div>
-                <strong>TanStack Query</strong> - Server state management
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* 
-          Monorepo Structure Card
-        */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Monorepo Structure</CardTitle>
-            <CardDescription>Where to find things in this project</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6 text-sm font-mono">
-              <div>
-                <h4 className="font-bold text-primary mb-2">apps/</h4>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>
-                    |-- web/ <span className="text-xs">(this React app)</span>
-                  </li>
-                  <li>
-                    |-- functions/ <span className="text-xs">(tRPC backend)</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-primary mb-2">packages/</h4>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>
-                    |-- ui/ <span className="text-xs">(shared components)</span>
-                  </li>
-                  <li>
-                    |-- shared/ <span className="text-xs">(Zod schemas)</span>
-                  </li>
-                  <li>
-                    |-- config/ <span className="text-xs">(TypeScript config)</span>
-                  </li>
-                </ul>
-              </div>
+          {status === 'success' && (
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-green-400 font-medium">System Online</span>
             </div>
-          </CardContent>
-          <CardFooter className="justify-center gap-4">
-            <a href="https://turbo.build/repo/docs" target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary">Turborepo Docs</Button>
-            </a>
-            <a href="https://ui.shadcn.com" target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary">Shadcn UI Docs</Button>
-            </a>
-          </CardFooter>
-        </Card>
+          )}
+
+          {status === 'error' && (
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-red-400 font-medium">Connection Failed</span>
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Footer */}
-      <p className="text-center text-muted-foreground mt-8 text-sm">
-        Edit <code className="bg-muted px-1 rounded">apps/web/src/App.tsx</code> and save to see hot
-        reload in action!
-      </p>
     </div>
   )
 }
+
+function AuthPage({ type }: { type: 'login' | 'signup' }) {
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-8 p-8 bg-gray-900 rounded-2xl border border-gray-800">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+            {type === 'login' ? 'Welcome Back' : 'Create Account'}
+          </h2>
+          <p className="mt-2 text-sm text-gray-400">
+            {type === 'login' ? 'Sign in to access your dashboard' : 'Join TrailQuest today'}
+          </p>
+        </div>
+
+        {type === 'login' ? <LoginForm /> : <SignUpForm />}
+
+        <div className="text-center">
+          <a
+            href={type === 'login' ? '/signup' : '/login'}
+            className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {type === 'login'
+              ? "Don't have an account? Sign up"
+              : 'Already have an account? Sign in'}
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes - Only accessible if NOT logged in */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<AuthPage type="login" />} />
+            <Route path="/signup" element={<AuthPage type="signup" />} />
+          </Route>
+
+          {/* Protected Routes - Only accessible if logged in */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
+
+export default App

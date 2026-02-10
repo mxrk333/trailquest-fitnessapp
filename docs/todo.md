@@ -2,25 +2,25 @@
 
 _Goal: Establish the monorepo's connection to Firebase and define the data contract._
 
-- [ ] **1.1 Firebase Project Initialization**
-- [ ] Create Google Firebase project (Spark or Blaze plan).
-- [ ] Enable **Firestore** in "Test Mode" (initially).
-- [ ] Enable **Firebase Auth** (Email/Password & Google).
-- [ ] Generate `firebaseConfig` and add to `.env.local` in `apps/web`.
+- [✅] **1.1 Firebase Project Initialization**
+- [✅] Create Google Firebase project (Spark or Blaze plan).
+- [✅] Enable **Firestore** in "Test Mode" (initially).
+- [✅] Enable **Firebase Auth** (Email/Password & Google).
+- [✅] Generate `firebaseConfig` and add to `.env.local` in `apps/web`.
 
-- [ ] **1.2 Monorepo Wiring**
-- [ ] Install `firebase` and `react-firebase-hooks` in `apps/web`.
-- [ ] Create `apps/web/src/lib/firebase.ts` (Initialize App, Auth, and Firestore).
-- [ ] Configure `packages/shared` to export Zod schemas (e.g., `UserSchema`, `WorkoutSchema`).
+- [✅] **1.2 Monorepo Wiring**
+- [✅] Install `firebase` and `react-firebase-hooks` in `apps/web`.
+- [✅] Create `apps/web/src/lib/firebase.ts` (Initialize App, Auth, and Firestore).
+- [✅] Configure `packages/shared` for shared types/schemas (Zod).
 
-- [ ] **1.3 Auth & Role-Based Onboarding**
-- [ ] Build `SignUp` and `Login` screens using **Shadcn UI** forms.
-- [ ] Implement a `PostSignUp` flow: User must select `Role` (Trainee/Trainer) and `Fitness Level`.
-- [ ] Write the first Firestore trigger: Create a document in `/users/{uid}` upon Auth success.
+- [✅] **1.3 Auth & Role-Based Onboarding**
+- [✅] Implement `SignUp` and `Login` pages using **Shadcn UI** & **Zod**.
+- [✅] Create `PostSignUp` page for role selection (Trainee vs. Trainer).
+- [✅] Create User document in Firestore upon registration.
 
-- [ ] **1.4 Global State & Guarding**
-- [ ] Create `AuthProvider` in `apps/web/src/providers`.
-- [ ] Create `ProtectedRoute` component to redirect unauthenticated users.
+- [✅] **1.4 Global State & Guarding**
+- [✅] Implement `AuthProvider` (using Context API + Firebase Auth).
+- [✅] Protect private routes (redirect unauthenticated users to Login).
 
 ---
 

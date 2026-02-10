@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public access to connection_test for verifying connectivity
+    match /connection_test/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Default rule: allow read/write only if authenticated
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

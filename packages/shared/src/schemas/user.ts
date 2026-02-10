@@ -1,15 +1,19 @@
 import { z } from 'zod'
 
-export const UserSchema = z.object({
-  id: z.string().min(1),
-  email: z.string().email(),
-  name: z.string().optional(),
-})
+export const UserRoleSchema = z.enum(['trainee', 'trainer'])
+export const FitnessLevelSchema = z.enum(['beginner', 'intermediate', 'advanced'])
 
-export const CreateUserSchema = z.object({
+export const UserSchema = z.object({
+  uid: z.string(),
   email: z.string().email(),
-  name: z.string().optional(),
+  displayName: z.string().optional(),
+  photoURL: z.string().url().optional(),
+  role: UserRoleSchema.optional(), // Optional initially, set during onboarding
+  fitnessLevel: FitnessLevelSchema.optional(),
+  createdAt: z.any(), // Firebase Timestamp
+  updatedAt: z.any(),
 })
 
 export type User = z.infer<typeof UserSchema>
-export type CreateUser = z.infer<typeof CreateUserSchema>
+export type UserRole = z.infer<typeof UserRoleSchema>
+export type FitnessLevel = z.infer<typeof FitnessLevelSchema>

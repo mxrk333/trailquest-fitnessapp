@@ -7,6 +7,8 @@
     "./Counter": "./components/Counter.tsx",
     "./Button": "./components/ui/button.tsx",
     "./Card": "./components/ui/card.tsx",
+    "./Input": "./components/ui/input.tsx",
+    "./Label": "./components/ui/label.tsx",
     "./utils": "./lib/utils.ts"
   },
   "scripts": {
@@ -19,6 +21,7 @@
     "react-dom": "^18.3.1"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.6.0"
