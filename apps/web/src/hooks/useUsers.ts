@@ -5,7 +5,7 @@ export function useUsers() {
 }
 
 export function useUser(id: string) {
-  return trpc.user.getById.useQuery(id)
+  return trpc.user.byId.useQuery(id)
 }
 
 export function useCreateUser() {

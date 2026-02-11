@@ -22,11 +22,11 @@ export default {
         },
         'background-light': '#f6f8f6',
         'background-dark': '#102216',
-        'card-dark': '#162e1e',
-        'surface-dark': '#1E293B', // Keeping for compatibility, but prefer card-dark
-        'input-bg': '#0a160e',
-        'text-main': '#F8FAFC',
-        'text-muted': '#94A3B8',
+        'surface-dark': '#152e1e',
+        'surface-darker': '#0d1c12',
+        'primary-dark': '#0ea640',
+        'strain-high': '#ef4444',
+        'strain-med': '#f59e0b',
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',

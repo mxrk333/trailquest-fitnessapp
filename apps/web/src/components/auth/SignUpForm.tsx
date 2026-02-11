@@ -11,6 +11,9 @@ const signUpSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['trainee', 'hiker', 'trainer']),
+  age: z.coerce.number().min(1, 'Age must be valid').optional(),
+  weight: z.coerce.number().min(1, 'Weight must be valid').optional(),
+  height: z.coerce.number().min(1, 'Height must be valid').optional(),
   terms: z.boolean().refine(val => val === true, 'You must agree to the terms'),
 })
 
@@ -37,7 +40,15 @@ export function SignUpForm() {
     setLoading(true)
     setError(null)
     try {
-      await signUpWithEmail(data.email, data.password, data.name, data.role)
+      await signUpWithEmail(
+        data.email,
+        data.password,
+        data.name,
+        data.role,
+        data.age,
+        data.weight,
+        data.height
+      )
       navigate('/')
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -180,6 +191,63 @@ export function SignUpForm() {
           {errors.password && (
             <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
           )}
+        </div>
+
+        {/* Physical Stats Grid */}
+        <div className="grid grid-cols-3 gap-3">
+          {/* Age */}
+          <div>
+            <label
+              className="block text-xs font-semibold uppercase tracking-wider text-gray-400 ml-1"
+              htmlFor="age"
+            >
+              Age
+            </label>
+            <input
+              id="age"
+              type="number"
+              placeholder="25"
+              disabled={loading}
+              className="mt-1 block w-full px-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              {...register('age')}
+            />
+          </div>
+
+          {/* Weight */}
+          <div>
+            <label
+              className="block text-xs font-semibold uppercase tracking-wider text-gray-400 ml-1"
+              htmlFor="weight"
+            >
+              Weight (kg)
+            </label>
+            <input
+              id="weight"
+              type="number"
+              placeholder="75"
+              disabled={loading}
+              className="mt-1 block w-full px-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              {...register('weight')}
+            />
+          </div>
+
+          {/* Height */}
+          <div>
+            <label
+              className="block text-xs font-semibold uppercase tracking-wider text-gray-400 ml-1"
+              htmlFor="height"
+            >
+              Height (cm)
+            </label>
+            <input
+              id="height"
+              type="number"
+              placeholder="180"
+              disabled={loading}
+              className="mt-1 block w-full px-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              {...register('height')}
+            />
+          </div>
         </div>
       </div>
 

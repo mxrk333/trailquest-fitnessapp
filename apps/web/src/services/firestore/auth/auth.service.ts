@@ -13,7 +13,10 @@ export const signUpWithEmail = async (
   email: string,
   password: string,
   name: string,
-  role: string
+  role: string,
+  age?: number,
+  weight?: number,
+  height?: number
 ): Promise<User> => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
@@ -27,6 +30,9 @@ export const signUpWithEmail = async (
       email: userCredential.user.email,
       displayName: name,
       role: role,
+      age: age || null,
+      weight: weight || null,
+      height: height || null,
       createdAt: new Date(),
     })
 

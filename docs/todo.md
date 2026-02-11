@@ -28,21 +28,21 @@ _Goal: Establish the monorepo's connection to Firebase and define the data contr
 
 _Goal: The "Input" phase. Getting workout and hike data into the cloud._
 
-- [ ] **2.1 The Workout Engine**
-- [ ] Build `WorkoutLogger` component (Multi-step form).
-- [ ] Feature: Add/Remove Exercise rows.
-- [ ] Feature: Searchable exercise database (local JSON list: "Squat", "Bench", etc.).
-- [ ] Implement `handleSaveWorkout`: Validate via Zod → Push to Firestore `/workouts` collection.
+- [✅] **2.1 The Workout Engine**
+- [✅] Build `WorkoutLogger` component (Multi-step form).
+- [✅] Feature: Add/Remove Exercise rows.
+- [✅] Feature: Searchable exercise database (local JSON list: "Squat", "Bench", etc.).
+- [✅] Implement `handleSaveWorkout`: Validate via Zod → Push to Firestore `/workouts` collection.
 
-- [ ] **2.2 The Hiking Tracker**
-- [ ] Build `HikeLogger` UI (Distance, Time, Elevation Gain).
-- [ ] Logic: Create a "Muscle Contribution" mapper (e.g., If Elevation > 500ft, add +20% load to Calves/Glutes).
-- [ ] Save hike to `/hikes` collection with a `type: "hike"` flag.
+- [✅] **2.2 The Hiking Tracker**
+- [✅] Build `HikeLogger` UI (Distance, Time, Elevation Gain).
+- [✅] Logic: Create a "Muscle Contribution" mapper (e.g., If Elevation > 500ft, add +20% load to Calves/Glutes).
+- [✅] Save hike to `/hikes` collection with a `type: "hike"` flag.
 
-- [ ] **2.3 The History Feed**
-- [ ] Create a `DashboardFeed` component.
-- [ ] Use `useCollectionData` (from `react-firebase-hooks`) for real-time list updates.
-- [ ] Design "Activity Cards" in Tailwind that distinguish between a Gym session and a Trail session.
+- [✅] **2.3 The History Feed**
+- [✅] Create a `DashboardFeed` component.
+- [✅] Use `useCollectionData` (from `react-firebase-hooks`) for real-time list updates.
+- [✅] Design "Activity Cards" in Tailwind that distinguish between a Gym session and a Trail session.
 
 ---
 

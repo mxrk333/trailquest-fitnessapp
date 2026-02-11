@@ -9,7 +9,11 @@ export const UserSchema = z.object({
   displayName: z.string().optional(),
   photoURL: z.string().url().optional(),
   role: UserRoleSchema.optional(), // Optional initially, set during onboarding
+  trainerId: z.string().optional(), // ID of the assigned trainer
   fitnessLevel: FitnessLevelSchema.optional(),
+  age: z.number().optional(),
+  weight: z.number().optional(),
+  height: z.number().optional(),
   createdAt: z.any(), // Firebase Timestamp
   updatedAt: z.any(),
 })

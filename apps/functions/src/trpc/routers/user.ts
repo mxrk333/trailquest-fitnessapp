@@ -1,28 +1,53 @@
 import { z } from 'zod'
 import { router, publicProcedure } from '../trpc'
-import { CreateUserSchema, UserSchema } from '@repo/shared'
+import { UserSchema } from '@repo/shared'
+
+const CreateUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string(),
+})
 
 export const userRouter = router({
   create: publicProcedure
     .input(CreateUserSchema)
     .output(UserSchema)
     .mutation(({ input }) => ({
-      id: 'dummy-id',
+      uid: 'dummy-id',
       email: input.email,
-      name: input.name,
+      displayName: input.name,
+      role: 'trainee',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })),
 
-  getById: publicProcedure
+  byId: publicProcedure
     .input(z.string())
     .output(UserSchema)
     .query(({ input }) => ({
-      id: input,
+      uid: input,
       email: 'test@example.com',
-      name: 'Test User',
+      displayName: 'Test User',
+      role: 'trainee',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })),
 
   list: publicProcedure.output(z.array(UserSchema)).query(() => [
-    { id: 'user-1', email: 'user1@example.com', name: 'User One' },
-    { id: 'user-2', email: 'user2@example.com', name: 'User Two' },
+    {
+      uid: 'user-1',
+      email: 'user1@example.com',
+      displayName: 'User One',
+      role: 'trainee',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      uid: 'user-2',
+      email: 'user2@example.com',
+      displayName: 'User Two',
+      role: 'trainer',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   ]),
 })

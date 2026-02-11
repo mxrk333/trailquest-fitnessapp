@@ -74,7 +74,7 @@ describe('useUser', () => {
       wrapper: createWrapper(),
     })
     expect(result.current.data).toBeDefined()
-    expect(result.current.data?.id).toBe('user-1')
+    expect(result.current.data?.uid).toBe('user-1')
   })
 })
 

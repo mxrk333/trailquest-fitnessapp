@@ -21,8 +21,9 @@ Firestore is document-oriented. We will structure the data to minimize "joins" (
 - **`users` {collection}**
 - `uid` {doc}:
 - `displayName`: string
-- `role`: "trainee" | "trainer" | "both"
-- `trainerId`: string (reference to trainer's UID)
+- `role`: "trainee" | "hiker" | "trainer"
+- `trainerId`: string (primary assigned trainer)
+- `allowedTrainers`: string[] (list of trainers granted access)
 - `muscleHeatmap`: { quads: 0.8, glutes: 0.4, ... } (Calculated on-the-fly or per-log)
 
 - **`workouts` {collection}**
@@ -59,8 +60,8 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
 
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "trainer");
-      allow write: if request.auth.uid == userId;
+      allow read: if isSignedIn() && (request.auth.uid == userId || resource.data.trainerId == request.auth.uid || resource.data.allowedTrainers.hasAny([request.auth.uid]));
+      allow write: if request.auth.uid == userId; // Users update their own profile (including granting access)
     }
 
     match /workouts/{workoutId} {

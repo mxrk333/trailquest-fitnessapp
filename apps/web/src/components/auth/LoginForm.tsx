@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 import { signInWithEmail, signInWithGoogle } from '@/services/firestore/auth/auth.service'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -174,15 +174,15 @@ export function LoginForm() {
       <div className="mt-8 text-center">
         <p className="text-sm text-gray-400">
           New to TrailQuest?{' '}
-          <a
+          <Link
             className="font-bold text-primary hover:text-primary/80 transition-colors ml-1 inline-flex items-center group"
-            href="/sign-up"
+            to="/sign-up"
           >
             Create an Account
             <span className="material-icons text-base ml-0.5 transform group-hover:translate-x-1 transition-transform">
               chevron_right
             </span>
-          </a>
+          </Link>
         </p>
       </div>
     </form>

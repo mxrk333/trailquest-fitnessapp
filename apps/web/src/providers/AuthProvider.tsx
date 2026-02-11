@@ -1,23 +1,51 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, onAuthStateChanged } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase'
+
+export interface UserProfile {
+  uid: string
+  email: string
+  displayName: string
+  role: 'trainee' | 'hiker' | 'trainer'
+  age?: number
+  weight?: number
+  height?: number
+  createdAt: any
+}
 
 interface AuthContextType {
   user: User | null
+  profile: UserProfile | null
   loading: boolean
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true })
+const AuthContext = createContext<AuthContextType>({ user: null, profile: null, loading: true })
 
 export const useAuth = () => useContext(AuthContext)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+    const unsubscribe = onAuthStateChanged(auth, async currentUser => {
       setUser(currentUser)
+
+      if (currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid))
+          if (userDoc.exists()) {
+            setProfile(userDoc.data() as UserProfile)
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error)
+        }
+      } else {
+        setProfile(null)
+      }
+
       setLoading(false)
     })
 
@@ -25,6 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>{!loading && children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, profile, loading }}>
+      {!loading && children}
+    </AuthContext.Provider>
   )
 }

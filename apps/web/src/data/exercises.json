@@ -1,0 +1,62 @@
+[
+  {
+    "id": "squat",
+    "name": "Barbell Squat",
+    "muscles": ["quads", "glutes", "hamstrings"],
+    "category": "strength"
+  },
+  {
+    "id": "deadlift",
+    "name": "Barbell Deadlift",
+    "muscles": ["hamstrings", "glutes", "lower_back"],
+    "category": "strength"
+  },
+  {
+    "id": "bench_press",
+    "name": "Bench Press",
+    "muscles": ["chest", "triceps", "shoulders"],
+    "category": "strength"
+  },
+  {
+    "id": "pull_up",
+    "name": "Pull Up",
+    "muscles": ["lats", "biceps", "upper_back"],
+    "category": "strength"
+  },
+  {
+    "id": "overhead_press",
+    "name": "Overhead Press",
+    "muscles": ["shoulders", "triceps"],
+    "category": "strength"
+  },
+  {
+    "id": "lunge",
+    "name": "Walking Lunge",
+    "muscles": ["quads", "glutes"],
+    "category": "strength"
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "muscles": ["abs", "core"],
+    "category": "core"
+  },
+  {
+    "id": "push_up",
+    "name": "Push Up",
+    "muscles": ["chest", "triceps", "shoulders"],
+    "category": "strength"
+  },
+  {
+    "id": "dumbbell_curl",
+    "name": "Dumbbell Curl",
+    "muscles": ["biceps"],
+    "category": "strength"
+  },
+  {
+    "id": "tricep_dip",
+    "name": "Tricep Dip",
+    "muscles": ["triceps", "chest"],
+    "category": "strength"
+  }
+]
