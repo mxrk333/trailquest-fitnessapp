@@ -4,7 +4,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PublicRoute } from './components/layout/PublicRoute'
 import { LoginForm } from './components/auth/LoginForm'
 import { SignUpForm } from './components/auth/SignUpForm'
-import { Onboarding } from './pages/onboarding/Onboarding'
+
 import { testFirestoreConnection } from './services/firestore/test.service'
 import { useEffect, useState } from 'react'
 
@@ -37,7 +37,7 @@ function Home() {
       </div>
 
       <div className="max-w-md w-full text-center space-y-8">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent animate-pulse">
+        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent animate-pulse">
           TrailQuest
         </h1>
 
@@ -78,33 +78,20 @@ function Home() {
   )
 }
 
+import { AuthLayout } from './components/layout/AuthLayout'
+
 function AuthPage({ type }: { type: 'login' | 'signup' }) {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8 p-8 bg-gray-900 rounded-2xl border border-gray-800">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-            {type === 'login' ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            {type === 'login' ? 'Sign in to access your dashboard' : 'Join TrailQuest today'}
-          </p>
-        </div>
-
-        {type === 'login' ? <LoginForm /> : <SignUpForm />}
-
-        <div className="text-center">
-          <a
-            href={type === 'login' ? '/signup' : '/login'}
-            className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            {type === 'login'
-              ? "Don't have an account? Sign up"
-              : 'Already have an account? Sign in'}
-          </a>
-        </div>
-      </div>
-    </div>
+    <AuthLayout
+      title={type === 'login' ? 'Welcome back' : 'Create your account'}
+      subtitle={
+        type === 'login'
+          ? 'Sign in to access your dashboard'
+          : 'Join our community of fitness enthusiasts today.'
+      }
+    >
+      {type === 'login' ? <LoginForm /> : <SignUpForm />}
+    </AuthLayout>
   )
 }
 
@@ -122,7 +109,6 @@ export function App() {
           {/* Protected Routes - Only accessible if logged in */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
-            <Route path="/onboarding" element={<Onboarding />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
