@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
-import { saveHike } from '@/services/firestore/hikes'
+import { saveHike, getHikeById, updateHike } from '@/services/firestore/hikes'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
 const hikeFormSchema = z.object({
+  mountain: z.string().min(1, 'Mountain name is required'),
+  date: z.string().min(1, 'Date is required'),
   distance: z.coerce.number().min(0.1, 'Distance must be greater than 0'),
   elevationGain: z.coerce.number().min(0, 'Elevation gain must be positive'),
   duration: z.coerce.number().min(1, 'Duration must be at least 1 minute'),
@@ -15,9 +18,17 @@ const hikeFormSchema = z.object({
 
 type HikeFormValues = z.infer<typeof hikeFormSchema>
 
-export function HikeLogger() {
+interface HikeLoggerProps {
+  mode?: 'log' | 'assign'
+  targetUserId?: string
+}
+
+export function HikeLogger({ mode = 'log', targetUserId }: HikeLoggerProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('id')
+
   const [loading, setLoading] = useState(false)
   const [activeMuscles, setActiveMuscles] = useState<string[]>(['calves', 'quads'])
   const [difficulty, setDifficulty] = useState(0)
@@ -26,10 +37,39 @@ export function HikeLogger() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<HikeFormValues>({
     resolver: zodResolver(hikeFormSchema),
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+    },
   })
+
+  // Fetch hike data if editing
+  const { data: editHike } = useQuery({
+    queryKey: ['hike', editId],
+    queryFn: async () => {
+      if (!editId) return null
+      return await getHikeById(editId)
+    },
+    enabled: !!editId,
+  })
+
+  // Populate form when data arrives
+  useEffect(() => {
+    if (editHike) {
+      setValue('mountain', editHike.mountain || '')
+      setValue('date', new Date(editHike.timestamp).toISOString().split('T')[0])
+      setValue('distance', editHike.distance)
+      setValue('elevationGain', editHike.elevationGain)
+      setValue('duration', editHike.duration)
+      setValue('notes', editHike.notes || '')
+      if (editHike.activeMuscles) {
+        setActiveMuscles(editHike.activeMuscles)
+      }
+    }
+  }, [editHike, setValue])
 
   // Watch fields for calculations
   const elevationGain = watch('elevationGain')
@@ -66,17 +106,31 @@ export function HikeLogger() {
 
     setLoading(true)
     try {
-      console.log('Saving hike data:', { ...data, activeMuscles })
-      await saveHike({
-        userId: user.uid,
-        timestamp: new Date(),
+      const hikeData = {
+        userId: targetUserId || user.uid,
+        timestamp: new Date(data.date),
+        mountain: data.mountain,
         distance: data.distance,
         elevationGain: data.elevationGain,
         duration: data.duration,
         activeMuscles: activeMuscles,
-        notes: data.notes || undefined,
-      })
-      navigate('/')
+        notes: data.notes,
+        status: (mode === 'assign' ? 'pending' : 'completed') as 'pending' | 'completed' | 'missed',
+        ...(mode === 'assign'
+          ? { assignedBy: user.uid }
+          : editHike?.assignedBy
+            ? { assignedBy: editHike.assignedBy }
+            : {}),
+      }
+      if (editId) {
+        await updateHike(editId, hikeData)
+        console.log('✅ Hike updated')
+        navigate('/dashboard') // Or wherever appropriate
+      } else {
+        await saveHike(hikeData)
+        console.log('✅ Hike saved')
+        navigate('/')
+      }
     } catch (error: unknown) {
       console.error('Failed to save hike', error)
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -91,9 +145,10 @@ export function HikeLogger() {
       {/* Left Column: Input Forms */}
       <div className="lg:col-span-2 space-y-6">
         {/* Hike Details Card */}
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-primary/10">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <span className="material-icons text-primary">hiking</span> Hike Details
+        <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20">
+          <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <span className="material-icons text-primary">hiking</span>{' '}
+            {editId ? 'Edit Hike Details' : 'Hike Details'}
           </h2>
 
           <form
@@ -102,19 +157,37 @@ export function HikeLogger() {
             className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"
           >
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                Trail Name
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Mountain
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-icons text-gray-500 text-lg">search</span>
+                  <span className="material-icons text-gray-500 text-lg">terrain</span>
                 </span>
                 <input
                   type="text"
-                  placeholder="Search saved trails or name a new one..."
-                  className="w-full pl-10 bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  placeholder="e.g. Mount Everest"
+                  {...register('mountain')}
+                  className="w-full pl-10 bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                 />
               </div>
+              {errors.mountain && (
+                <p className="text-red-500 text-xs mt-1">{errors.mountain.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                Date
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  {...register('date')}
+                  className="w-full bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                />
+              </div>
+              {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}
             </div>
 
             <div>
@@ -127,7 +200,7 @@ export function HikeLogger() {
                   step="0.1"
                   placeholder="0.0"
                   {...register('distance')}
-                  className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg pl-4 pr-12 py-3 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  className="w-full bg-surface-darker border border-gray-700 rounded-lg pl-4 pr-12 py-3 text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                 />
                 <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500 text-sm font-medium">
                   km
@@ -147,7 +220,7 @@ export function HikeLogger() {
                   type="number"
                   placeholder="90"
                   {...register('duration')}
-                  className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg pl-4 pr-12 py-3 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  className="w-full bg-surface-darker border border-gray-700 rounded-lg pl-4 pr-12 py-3 text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                 />
                 <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500 text-sm font-medium">
                   min
@@ -167,7 +240,7 @@ export function HikeLogger() {
                   type="number"
                   placeholder="0"
                   {...register('elevationGain')}
-                  className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg pl-4 pr-12 py-3 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  className="w-full bg-surface-darker border border-gray-700 rounded-lg pl-4 pr-12 py-3 text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                 />
                 <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500 text-sm font-medium">
                   m
@@ -178,22 +251,6 @@ export function HikeLogger() {
               )}
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                Pack Weight
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  placeholder="0"
-                  className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg pl-4 pr-12 py-3 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                />
-                <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500 text-sm font-medium">
-                  kg
-                </span>
-              </div>
-            </div>
-
             <div className="md:col-span-2">
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                 Trail Notes
@@ -201,7 +258,7 @@ export function HikeLogger() {
               <textarea
                 placeholder="Muddy conditions on the north face..."
                 {...register('notes')}
-                className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none min-h-[100px]"
+                className="w-full bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none min-h-[100px]"
               ></textarea>
             </div>
           </form>
@@ -213,8 +270,8 @@ export function HikeLogger() {
       {/* Right Column: Summary & Save */}
       <div className="lg:col-span-1 space-y-6">
         {/* Dynamic Summary Card */}
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-primary/10 sticky top-24">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-6">
+        <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20 sticky top-24">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-6">
             Session Summary
           </h3>
           <div className="space-y-4">
@@ -261,9 +318,16 @@ export function HikeLogger() {
               className="w-full bg-primary hover:bg-green-400 text-background-dark font-bold py-3.5 px-6 rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
-                <span className="w-5 h-5 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></span>
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></span>
+                  Saving...
+                </span>
+              ) : editId ? (
+                'Update Hike'
+              ) : mode === 'assign' ? (
+                'Assign Hike'
               ) : (
-                'Save Activity Log'
+                'Save Hike Log'
               )}
             </button>
             <button className="w-full bg-transparent hover:bg-gray-100 dark:hover:bg-primary/10 text-gray-600 dark:text-gray-400 font-semibold py-3 px-6 rounded-lg border border-gray-300 dark:border-primary/20 transition-all">

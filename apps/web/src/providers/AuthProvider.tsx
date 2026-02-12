@@ -18,9 +18,15 @@ interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  refreshProfile: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, profile: null, loading: true })
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  profile: null,
+  loading: true,
+  refreshProfile: async () => {}
+})
 
 export const useAuth = () => useContext(AuthContext)
 
@@ -28,6 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const refreshProfile = async () => {
+    if (user) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid))
+        if (userDoc.exists()) {
+          setProfile(userDoc.data() as UserProfile)
+        }
+      } catch (error) {
+        console.error('Error refreshing user profile:', error)
+        throw error
+      }
+    }
+  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async currentUser => {
@@ -53,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading }}>
+    <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   )

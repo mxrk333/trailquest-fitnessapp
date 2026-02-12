@@ -1,13 +1,21 @@
+import { useState } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { WorkoutLogger } from '@/components/workouts/WorkoutLogger'
 import { HikeLogger } from '@/components/hikes/HikeLogger'
 import { NutritionLogger } from '@/components/nutrition/NutritionLogger'
 import { RestDayLogger } from '@/components/restdays/RestDayLogger'
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/providers/AuthProvider'
 
 export function LogActivity() {
-  const [activeTab, setActiveTab] = useState<'workout' | 'hike' | 'nutrition' | 'rest'>('workout')
+  const [searchParams] = useSearchParams()
+  const initialType = searchParams.get('type') as 'workout' | 'hike' | 'nutrition' | 'rest' | null
+
+  const [activeTab, setActiveTab] = useState<'workout' | 'hike' | 'nutrition' | 'rest'>(
+    initialType === 'hike' || initialType === 'nutrition' || initialType === 'rest'
+      ? initialType
+      : 'workout'
+  )
   const { profile } = useAuth()
 
   const canAccessHikes = profile?.role === 'hiker' || profile?.role === 'trainer'
@@ -27,17 +35,17 @@ export function LogActivity() {
           <p className="text-gray-400">Track your workouts, hikes, nutrition, and recovery</p>
         </div>
 
-        <div className="bg-surface-dark border border-primary/10 rounded-xl p-6">
+        <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-primary/20 backdrop-blur-xl rounded-2xl p-6 shadow-xl">
           {/* Tab Navigation */}
           <div className="flex gap-2 mb-6 overflow-x-auto">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-primary text-background-dark'
-                    : 'bg-background-dark text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-white border border-primary/40 shadow-lg shadow-primary/10'
+                    : 'bg-surface-dark/50 text-gray-400 hover:text-gray-200 hover:bg-surface-dark border border-white/5 hover:border-primary/20'
                 }`}
               >
                 <span className="material-icons text-xl">{tab.icon}</span>

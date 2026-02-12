@@ -6,9 +6,10 @@ import { signOut } from 'firebase/auth'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
+  hideLogActivity?: boolean // Hide "Log Activity" button (for trainer viewing client page)
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, hideLogActivity = false }: DashboardLayoutProps) {
   const { user, profile } = useAuth()
   const location = useLocation()
   const [showMenu, setShowMenu] = useState(false)
@@ -23,15 +24,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }
 
-  const navItems = [
+  const allNavItems = [
     { path: '/', icon: 'dashboard', label: 'Dashboard' },
     { path: '/log-activity', icon: 'add_circle', label: 'Log Activity' },
+    ...(profile?.role === 'trainer'
+      ? [{ path: '/trainer-assignments', icon: 'assignment', label: 'Your Assigned Tasks' }]
+      : [{ path: '/assigned-tasks', icon: 'assignment', label: 'Assigned Tasks' }]),
     { path: '/analytics', icon: 'trending_up', label: 'Analytics' },
     { path: '/settings', icon: 'tune', label: 'Settings' },
   ]
 
+  // Filter out Log Activity if hideLogActivity is true OR if user is a trainer
+  const navItems =
+    hideLogActivity || profile?.role === 'trainer'
+      ? allNavItems.filter(item => item.path !== '/log-activity')
+      : allNavItems
+
   return (
-    <div className="bg-gradient-to-br from-[#0a0f0d] via-background-dark to-[#0d1411] text-slate-200 font-display antialiased h-screen overflow-hidden flex relative">
+    <div className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f14] to-[#14141a] text-slate-200 font-display antialiased h-screen overflow-hidden flex relative">
       {/* Ambient background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>

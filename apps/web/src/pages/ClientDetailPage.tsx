@@ -26,7 +26,7 @@ export function ClientDetailPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout hideLogActivity={true}>
         <div className="flex items-center justify-center h-screen">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -39,7 +39,7 @@ export function ClientDetailPage() {
 
   if (!client) {
     return (
-      <DashboardLayout>
+      <DashboardLayout hideLogActivity={true}>
         <div className="flex flex-col items-center justify-center h-screen">
           <span className="material-icons text-6xl text-slate-700 mb-4">person_off</span>
           <h2 className="text-2xl font-bold text-white mb-2">Client Not Found</h2>
@@ -58,7 +58,7 @@ export function ClientDetailPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout hideLogActivity={true}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -78,6 +78,15 @@ export function ClientDetailPage() {
             <p className="text-gray-400">
               {client.email} • {client.role || 'Trainee'}
             </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(`/assign-activity/${clientId}`)}
+              className="group/btn flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-green-400 hover:from-primary/90 hover:to-green-400/90 text-background-dark rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-105"
+            >
+              <span className="material-icons text-lg">assignment_add</span>
+              <span>Assign Activity</span>
+            </button>
           </div>
         </div>
 
@@ -136,14 +145,14 @@ export function ClientDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Readiness & Heatmap */}
           <div className="space-y-6">
-            <ReadinessCard />
-            <NutritionWidget />
+            <ReadinessCard userId={client.uid} />
+            <NutritionWidget userId={client.uid} />
           </div>
 
           {/* Middle Column - Muscle Heatmap */}
           <div className="lg:col-span-2 space-y-6">
-            <MuscleHeatmap />
-            <DashboardFeed />
+            <MuscleHeatmap userId={client.uid} />
+            <DashboardFeed userId={client.uid} />
           </div>
         </div>
       </div>

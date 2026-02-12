@@ -1,13 +1,22 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
-import { saveWorkout } from '@/services/firestore/workouts'
+import { saveWorkout, getWorkoutById, updateWorkout } from '@/services/firestore/workouts'
 import { ExerciseRow } from './ExerciseRow'
 import { Exercise } from '@repo/shared'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
-export function WorkoutLogger() {
+interface WorkoutLoggerProps {
+  mode?: 'log' | 'assign'
+  targetUserId?: string
+}
+
+export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('id')
+
   const [loading, setLoading] = useState(false)
 
   const [workoutName, setWorkoutName] = useState('')
@@ -20,6 +29,33 @@ export function WorkoutLogger() {
       sets: [{ setNumber: 1, weight: 0, reps: 0, rpe: 0, completed: false }],
     },
   ])
+
+  // Fetch workout data if editing
+  const { data: editWorkout, isLoading: isLoadingWorkout } = useQuery({
+    queryKey: ['workout', editId],
+    queryFn: async () => {
+      if (!editId) return null
+      return await getWorkoutById(editId)
+    },
+    enabled: !!editId,
+  })
+
+  // Populate form when data arrives
+  useEffect(() => {
+    if (editWorkout) {
+      setWorkoutName(editWorkout.name || '')
+      // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+      const d = new Date(editWorkout.timestamp)
+      const formattedDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16)
+      setDate(formattedDate)
+
+      if (editWorkout.exercises && editWorkout.exercises.length > 0) {
+        setExercises(editWorkout.exercises)
+      }
+    }
+  }, [editWorkout])
 
   const handleAddExercise = () => {
     setExercises([
@@ -44,6 +80,26 @@ export function WorkoutLogger() {
     setExercises(newExercises)
   }
 
+  // Calculate workout status based on completed sets
+  const calculateWorkoutStatus = (exercises: Exercise[]): 'completed' | 'partial' | 'skipped' => {
+    const validExercises = exercises.filter(ex => ex.name.trim() !== '')
+    if (validExercises.length === 0) return 'skipped'
+
+    let totalSets = 0
+    let completedSets = 0
+
+    validExercises.forEach(ex => {
+      ex.sets.forEach(set => {
+        totalSets++
+        if (set.completed) completedSets++
+      })
+    })
+
+    if (completedSets === 0) return 'skipped'
+    if (completedSets === totalSets) return 'completed'
+    return 'partial'
+  }
+
   const handleSave = async () => {
     if (!user) return
 
@@ -56,13 +112,26 @@ export function WorkoutLogger() {
 
     setLoading(true)
     try {
-      await saveWorkout({
-        userId: user.uid,
+      const workoutData = {
+        userId: targetUserId || user.uid,
         timestamp: new Date(date),
         name: workoutName,
         exercises: validExercises,
         isRestDay: false,
-      })
+        status: (mode === 'assign' ? 'pending' : 'completed') as 'pending' | 'completed' | 'missed',
+        ...(mode === 'assign'
+          ? { assignedBy: user.uid }
+          : editWorkout?.assignedBy
+            ? { assignedBy: editWorkout.assignedBy }
+            : {}),
+      }
+      if (editId) {
+        await updateWorkout(editId, workoutData)
+        console.log('✅ Workout updated as', stats.status)
+      } else {
+        await saveWorkout(workoutData)
+        console.log('✅ Workout saved as', stats.status)
+      }
       navigate('/') // Redirect to dashboard
     } catch (error) {
       console.error('Failed to save workout', error)
@@ -76,10 +145,12 @@ export function WorkoutLogger() {
   const stats = useMemo(() => {
     let totalVolume = 0
     let setsCompleted = 0
+    let totalSets = 0
     const muscleCounts: Record<string, number> = {}
 
     exercises.forEach(ex => {
       ex.sets.forEach(set => {
+        totalSets++
         if (set.completed) {
           totalVolume += set.weight * set.reps
           setsCompleted++
@@ -100,7 +171,14 @@ export function WorkoutLogger() {
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 3)
 
-    return { totalVolume, setsCompleted, muscleLoad }
+    // Calculate status
+    const validExercises = exercises.filter(ex => ex.name.trim() !== '')
+    let status: 'completed' | 'partial' | 'skipped' = 'skipped'
+    if (setsCompleted === 0 && validExercises.length > 0) status = 'skipped'
+    else if (setsCompleted === totalSets && totalSets > 0) status = 'completed'
+    else if (setsCompleted > 0) status = 'partial'
+
+    return { totalVolume, setsCompleted, totalSets, muscleLoad, status }
   }, [exercises])
 
   return (
@@ -108,10 +186,10 @@ export function WorkoutLogger() {
       {/* Left Column: Input Forms */}
       <div className="lg:col-span-2 space-y-6">
         {/* Workout Header Card */}
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-primary/10">
+        <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
                 Workout Name
               </label>
               <input
@@ -119,7 +197,7 @@ export function WorkoutLogger() {
                 value={workoutName}
                 onChange={e => setWorkoutName(e.target.value)}
                 placeholder="e.g. Leg Day"
-                className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                className="w-full bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
               />
             </div>
             <div>
@@ -130,7 +208,7 @@ export function WorkoutLogger() {
                 type="datetime-local"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-surface-darker border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none accent-primary"
+                className="w-full bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none accent-primary"
               />
             </div>
           </div>
@@ -150,9 +228,9 @@ export function WorkoutLogger() {
         {/* Add Exercise Button */}
         <button
           onClick={handleAddExercise}
-          className="w-full border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all group h-32"
+          className="w-full border-2 border-dashed border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all group h-32"
         >
-          <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-surface-darker group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+          <div className="h-10 w-10 rounded-full bg-surface-darker group-hover:bg-primary/20 flex items-center justify-center transition-colors">
             <span className="material-icons text-2xl group-hover:text-primary transition-colors">
               add
             </span>
@@ -164,22 +242,43 @@ export function WorkoutLogger() {
       {/* Right Column: Summary & Save */}
       <div className="lg:col-span-1 space-y-6">
         {/* Dynamic Summary Card */}
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-primary/10 sticky top-24">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-6">
+        <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20 sticky top-24">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-6">
             Session Summary
           </h3>
+
+          {/* Status Badge */}
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-gray-300">Status</span>
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                stats.status === 'completed'
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : stats.status === 'partial'
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+              }`}
+            >
+              {stats.status === 'completed'
+                ? '✓ Complete'
+                : stats.status === 'partial'
+                  ? '⚠ Partial'
+                  : '— Empty'}
+            </span>
+          </div>
+
           <div className="space-y-4">
-            <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-600 dark:text-gray-300">Total Volume</span>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-800">
+              <span className="text-gray-300">Total Volume</span>
+              <span className="text-2xl font-bold text-white">
                 {stats.totalVolume.toLocaleString()}{' '}
                 <span className="text-sm text-gray-500 font-medium">kg</span>
               </span>
             </div>
             <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-600 dark:text-gray-300">Sets Completed</span>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats.setsCompleted}
+              <span className="text-gray-300">Sets Progress</span>
+              <span className="text-2xl font-bold text-white">
+                {stats.setsCompleted} / {stats.totalSets}
               </span>
             </div>
 
@@ -217,13 +316,17 @@ export function WorkoutLogger() {
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></span>
+              ) : editId ? (
+                `Update as ${stats.status === 'completed' ? 'Complete' : stats.status === 'partial' ? 'Partial' : 'Empty'}`
               ) : (
-                'Save Activity Log'
+                `Save as ${stats.status === 'completed' ? 'Complete' : stats.status === 'partial' ? 'Partial' : 'Empty'}`
               )}
             </button>
-            <button className="w-full bg-transparent hover:bg-gray-100 dark:hover:bg-primary/10 text-gray-600 dark:text-gray-400 font-semibold py-3 px-6 rounded-lg border border-gray-300 dark:border-primary/20 transition-all">
-              Save as Draft
-            </button>
+            <p className="text-xs text-gray-500 text-center">
+              {stats.status === 'partial' && '💡 You can continue this workout later'}
+              {stats.status === 'completed' && '✅ All sets completed!'}
+              {stats.status === 'skipped' && 'ℹ️ Mark at least one set as complete'}
+            </p>
           </div>
         </div>
 

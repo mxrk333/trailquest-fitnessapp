@@ -1,15 +1,53 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
-import { saveRestDay } from '@/services/firestore/restDays'
+import { saveRestDay, getRestDayById, updateRestDay } from '@/services/firestore/restDays'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
-export function RestDayLogger() {
+interface RestDayLoggerProps {
+  mode?: 'log' | 'assign'
+  targetUserId?: string
+}
+
+export function RestDayLogger({ mode = 'log', targetUserId }: RestDayLoggerProps) {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('id')
+
   const [loading, setLoading] = useState(false)
   const [type, setType] = useState<'complete_rest' | 'active_recovery'>('complete_rest')
-  const [notes, setNotes] = useState('')
   const [activities, setActivities] = useState<string[]>([])
   const [newActivity, setNewActivity] = useState('')
+  const [notes, setNotes] = useState('')
   const [duration, setDuration] = useState('')
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 16))
+
+  const { data: editRest } = useQuery({
+    queryKey: ['rest-day', editId],
+    queryFn: async () => {
+      if (!editId) return null
+      return await getRestDayById(editId)
+    },
+    enabled: !!editId,
+  })
+
+  // Populate form when data arrives
+  useEffect(() => {
+    if (editRest) {
+      setType(editRest.type)
+      setActivities(editRest.activities || [])
+      setNotes(editRest.notes || '')
+      setDuration(editRest.duration?.toString() || '')
+
+      const d = new Date(editRest.timestamp)
+      const formattedDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16)
+      setDate(formattedDate)
+    }
+  }, [editRest])
 
   const addActivity = () => {
     if (newActivity.trim()) {
@@ -26,24 +64,37 @@ export function RestDayLogger() {
     e.preventDefault()
     if (!user) return
 
+    setLoading(true)
     try {
-      setLoading(true)
-      await saveRestDay({
-        userId: user.uid,
-        timestamp: new Date(),
+      const restData = {
+        userId: targetUserId || user.uid,
+        timestamp: new Date(date),
         type,
+        activities: type === 'active_recovery' ? activities : [],
+        duration: type === 'active_recovery' ? Number(duration) : null,
         notes,
-        activities: type === 'active_recovery' ? activities : undefined,
-        duration: type === 'active_recovery' && duration ? parseInt(duration) : undefined,
-      })
+        status: (mode === 'assign' ? 'pending' : 'completed') as 'pending' | 'completed' | 'missed',
+        assignedBy: mode === 'assign' ? user.uid : editRest?.assignedBy || null,
+      } as any
 
-      // Reset form
-      setType('complete_rest')
-      setNotes('')
-      setActivities([])
-      setDuration('')
+      if (editId) {
+        await updateRestDay(editId, restData)
+        console.log('✅ Rest day updated')
+        navigate(-1)
+      } else {
+        await saveRestDay(restData)
+        console.log('✅ Rest day saved')
+        if (mode === 'assign') {
+          alert('Rest day assigned successfully!')
+          navigate(`/trainer/client/${targetUserId}`)
+        } else {
+          navigate('/')
+        }
+      }
 
-      alert('Rest day logged successfully!')
+      // Invalidate queries so dashboard updates immediately
+      await queryClient.invalidateQueries({ queryKey: ['recent-rest-days'] })
+      navigate('/')
     } catch (error) {
       console.error('Failed to log rest day:', error)
       alert('Failed to log rest day. Please try again.')
@@ -54,7 +105,9 @@ export function RestDayLogger() {
 
   return (
     <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
-      <h2 className="text-xl font-bold text-white mb-4">Log Rest Day</h2>
+      <h2 className="text-xl font-bold text-white mb-4">
+        {editId ? 'Edit Rest Day' : 'Log Rest Day'}
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-400 mb-2">Rest Type</label>
@@ -155,9 +208,17 @@ export function RestDayLogger() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-3 rounded-lg transition-colors disabled:opacity-50"
+          className="w-full bg-primary hover:bg-green-400 text-background-dark font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
-          {loading ? 'Logging...' : 'Log Rest Day'}
+          {loading ? (
+            <span className="w-5 h-5 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></span>
+          ) : editId ? (
+            'Update Rest Day'
+          ) : mode === 'assign' ? (
+            'Assign Rest Day'
+          ) : (
+            'Log Rest Day'
+          )}
         </button>
       </form>
     </div>

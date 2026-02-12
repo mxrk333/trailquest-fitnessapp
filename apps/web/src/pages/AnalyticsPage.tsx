@@ -4,26 +4,53 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useQuery } from '@tanstack/react-query'
 import { getRecentWorkouts } from '@/services/firestore/workouts'
 import { getRecentHikes } from '@/services/firestore/hikes'
+import { getTrainerClients } from '@/services/firestore/trainers'
+import { useState, useEffect } from 'react'
+import { User } from '@repo/shared'
 
 export function AnalyticsPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const [clients, setClients] = useState<User[]>([])
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+  const isTrainer = profile?.role === 'trainer'
+
+  // Load clients if user is a trainer
+  useEffect(() => {
+    async function loadClients() {
+      if (!user || !isTrainer) return
+      try {
+        const clientList = await getTrainerClients(user.uid)
+        setClients(clientList)
+        // Auto-select first client
+        if (clientList.length > 0 && !selectedClientId) {
+          setSelectedClientId(clientList[0].uid)
+        }
+      } catch (error) {
+        console.error('Failed to load clients:', error)
+      }
+    }
+    loadClients()
+  }, [user, isTrainer, selectedClientId])
+
+  // Determine which user's data to show
+  const targetUserId = isTrainer ? selectedClientId : user?.uid
 
   const { data: workouts = [] } = useQuery({
-    queryKey: ['analytics-workouts', user?.uid],
+    queryKey: ['analytics-workouts', targetUserId],
     queryFn: async () => {
-      if (!user?.uid) return []
-      return await getRecentWorkouts(user.uid, 50)
+      if (!targetUserId) return []
+      return await getRecentWorkouts(targetUserId, 50)
     },
-    enabled: !!user?.uid,
+    enabled: !!targetUserId,
   })
 
   const { data: hikes = [] } = useQuery({
-    queryKey: ['analytics-hikes', user?.uid],
+    queryKey: ['analytics-hikes', targetUserId],
     queryFn: async () => {
-      if (!user?.uid) return []
-      return await getRecentHikes(user.uid, 50)
+      if (!targetUserId) return []
+      return await getRecentHikes(targetUserId, 50)
     },
-    enabled: !!user?.uid,
+    enabled: !!targetUserId,
   })
 
   // Calculate statistics
@@ -82,13 +109,45 @@ export function AnalyticsPage() {
   const volumeChange = ((recentAvgVolume - previousAvgVolume) / previousAvgVolume) * 100
   const isProgressing = volumeChange > 0
 
+  // Get selected client name
+  const selectedClient = clients.find(c => c.uid === selectedClientId)
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Analytics & Progress</h1>
-          <p className="text-gray-400">Track your strength progress and optimize your training</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Analytics & Progress
+              {isTrainer && selectedClient && (
+                <span className="text-primary ml-2">- {selectedClient.displayName}</span>
+              )}
+            </h1>
+            <p className="text-gray-400">
+              {isTrainer
+                ? "View client's progress and training data"
+                : 'Track your strength progress and optimize your training'}
+            </p>
+          </div>
+
+          {/* Client Selector for Trainers */}
+          {isTrainer && clients.length > 0 && (
+            <div className="min-w-[250px]">
+              <label className="text-xs text-gray-400 uppercase mb-2 block">Select Client</label>
+              <select
+                value={selectedClientId || ''}
+                onChange={e => setSelectedClientId(e.target.value)}
+                className="w-full bg-surface-dark border border-primary/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+              >
+                {clients.map(client => (
+                  <option key={client.uid} value={client.uid}>
+                    {client.displayName || client.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Statistics Cards */}
@@ -164,13 +223,13 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Volume Trend Chart */}
+        {/* Training Load Chart */}
         <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
           <div className="mb-4">
-            <h3 className="text-lg font-bold text-white mb-1">Volume Trend</h3>
-            <p className="text-sm text-gray-400">Total weight × reps per workout session</p>
+            <h3 className="text-lg font-bold text-white mb-1">Training Load</h3>
+            <p className="text-sm text-gray-400">Gym Volume & Hike Elevation</p>
           </div>
-          <VolumeTrendChart />
+          <VolumeTrendChart userId={targetUserId || undefined} />
         </div>
 
         {/* Exercise Performance Table */}

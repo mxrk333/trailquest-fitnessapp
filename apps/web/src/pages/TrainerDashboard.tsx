@@ -35,48 +35,60 @@ export function TrainerDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400 uppercase">Total Clients</span>
-              <span className="material-icons text-primary">group</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-primary/20 backdrop-blur-xl p-6 rounded-2xl shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                Total Clients
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <span className="material-icons text-primary">group</span>
+              </div>
             </div>
-            <div className="text-3xl font-bold text-white">{clients.length}</div>
+            <div className="text-4xl font-bold text-white">{clients.length}</div>
           </div>
 
-          <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400 uppercase">Active Today</span>
-              <span className="material-icons text-green-400">trending_up</span>
+          <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-green-500/20 backdrop-blur-xl p-6 rounded-2xl shadow-xl hover:shadow-green-500/10 transition-all duration-300 hover:scale-[1.02]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                Active Today
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <span className="material-icons text-green-400">trending_up</span>
+              </div>
             </div>
-            <div className="text-3xl font-bold text-white">{clients.length}</div>
+            <div className="text-4xl font-bold text-white">{clients.length}</div>
           </div>
 
-          <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400 uppercase">Needs Attention</span>
-              <span className="material-icons text-orange-400">warning</span>
+          <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-orange-500/20 backdrop-blur-xl p-6 rounded-2xl shadow-xl hover:shadow-orange-500/10 transition-all duration-300 hover:scale-[1.02]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                Needs Attention
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                <span className="material-icons text-orange-400">warning</span>
+              </div>
             </div>
-            <div className="text-3xl font-bold text-white">0</div>
+            <div className="text-4xl font-bold text-white">0</div>
           </div>
         </div>
 
         {/* Clients Table */}
-        <div className="bg-surface-dark border border-primary/10 rounded-xl overflow-hidden">
-          <div className="p-6 border-b border-white/5">
-            <h2 className="text-xl font-bold text-white">Your Clients</h2>
+        <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-primary/20 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl">
+          <div className="p-6 border-b border-white/10">
+            <h2 className="text-2xl font-bold text-white">Your Clients</h2>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-black/20 border-b border-white/5">
-                <tr className="text-xs uppercase text-gray-400">
-                  <th className="text-left px-6 py-4">Client</th>
-                  <th className="text-left px-6 py-4">Role</th>
-                  <th className="text-left px-6 py-4">Last Active</th>
-                  <th className="text-left px-6 py-4">Muscle Load</th>
-                  <th className="text-center px-6 py-4">Status</th>
-                  <th className="text-right px-6 py-4">Actions</th>
+              <thead className="bg-black/30 border-b border-white/10">
+                <tr className="text-xs uppercase text-gray-400 tracking-wider">
+                  <th className="text-left px-6 py-4 font-semibold">Client</th>
+                  <th className="text-left px-6 py-4 font-semibold">Role</th>
+                  <th className="text-left px-6 py-4 font-semibold">Last Active</th>
+                  <th className="text-left px-6 py-4 font-semibold">Muscle Load</th>
+                  <th className="text-center px-6 py-4 font-semibold">Status</th>
+                  <th className="text-right px-6 py-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">

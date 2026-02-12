@@ -2,16 +2,21 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { getDailyNutrition } from '@/services/firestore/nutrition'
 
-export function NutritionWidget() {
+interface NutritionWidgetProps {
+  userId?: string // Optional: defaults to logged-in user
+}
+
+export function NutritionWidget({ userId }: NutritionWidgetProps = {}) {
   const { user } = useAuth()
+  const targetUserId = userId || user?.uid
 
   const { data: nutritionLogs = [] } = useQuery({
-    queryKey: ['nutrition-today', user?.uid],
+    queryKey: ['nutrition-today', targetUserId],
     queryFn: async () => {
-      if (!user?.uid) return []
-      return await getDailyNutrition(user.uid, new Date())
+      if (!targetUserId) return []
+      return await getDailyNutrition(targetUserId, new Date())
     },
-    enabled: !!user?.uid,
+    enabled: !!targetUserId,
     refetchInterval: 30000, // Refetch every 30 seconds
   })
 

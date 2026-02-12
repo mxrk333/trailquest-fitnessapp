@@ -48,8 +48,15 @@ export function ClientRow({ client }: ClientRowProps) {
     >
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary/30">
-            {client.displayName?.charAt(0).toUpperCase() || 'U'}
+          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/30">
+            <img
+              src={
+                client.photoURL ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(client.displayName || 'User')}&background=13EC5B&color=0a0f0d&bold=true`
+              }
+              alt={client.displayName || 'User'}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <div className="font-semibold text-white group-hover:text-primary transition-colors">

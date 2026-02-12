@@ -88,6 +88,9 @@ importers:
       '@trpc/react-query':
         specifier: ^11.0.0-rc.660
         version: 11.8.1(@tanstack/react-query@5.90.20)(@trpc/client@11.8.1)(@trpc/server@11.8.1)(react-dom@18.3.1)(react@18.3.1)(typescript@5.5.4)
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       firebase:
         specifier: ^12.9.0
         version: 12.9.0
@@ -103,6 +106,9 @@ importers:
       react-hook-form:
         specifier: ^7.71.1
         version: 7.71.1(react@18.3.1)
+      react-hot-toast:
+        specifier: ^2.6.0
+        version: 2.6.0(react-dom@18.3.1)(react@18.3.1)
       react-router-dom:
         specifier: ^7.13.0
         version: 7.13.0(react-dom@18.3.1)(react@18.3.1)
@@ -2594,6 +2600,10 @@ packages:
       whatwg-url: 14.2.0
     dev: true
 
+  /date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
+    dev: false
+
   /debug@4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -3267,6 +3277,14 @@ packages:
       slash: 5.1.0
       unicorn-magic: 0.3.0
     dev: true
+
+  /goober@2.1.18(csstype@3.2.3):
+    resolution: {integrity: sha512-2vFqsaDVIT9Gz7N6kAL++pLpp41l3PfDuusHcjnGLfR6+huZkl6ziX+zgVC3ZxpqWhzH6pyDdGrCeDhMIvwaxw==}
+    peerDependencies:
+      csstype: ^3.0.10
+    dependencies:
+      csstype: 3.2.3
+    dev: false
 
   /gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
@@ -4268,6 +4286,19 @@ packages:
       react: ^16.8.0 || ^17 || ^18 || ^19
     dependencies:
       react: 18.3.1
+    dev: false
+
+  /react-hot-toast@2.6.0(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
+    dependencies:
+      csstype: 3.2.3
+      goober: 2.1.18(csstype@3.2.3)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     dev: false
 
   /react-is@17.0.2:

@@ -63,3 +63,14 @@ export async function addClientToTrainer(trainerId: string, clientEmail: string)
     trainerId: trainerId,
   })
 }
+
+export async function getAllTrainers(): Promise<User[]> {
+  try {
+    const q = query(collection(db, USERS_COLLECTION), where('role', '==', 'trainer'))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as User[]
+  } catch (error) {
+    console.error('Error fetching trainers:', error)
+    return []
+  }
+}

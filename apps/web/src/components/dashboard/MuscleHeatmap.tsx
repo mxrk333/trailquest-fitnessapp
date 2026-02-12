@@ -2,9 +2,14 @@ import { useState } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
 import { useMuscleHeatmap } from '@/hooks/useMuscleHeatmap'
 
-export function MuscleHeatmap() {
+interface MuscleHeatmapProps {
+  userId?: string // Optional: defaults to logged-in user
+}
+
+export function MuscleHeatmap({ userId }: MuscleHeatmapProps = {}) {
   const { user } = useAuth()
-  const { data: muscleIntensities = {} } = useMuscleHeatmap(user?.uid)
+  const targetUserId = userId || user?.uid
+  const { data: muscleIntensities = {} } = useMuscleHeatmap(targetUserId)
   const [view, setView] = useState<'front' | 'back'>('front')
 
   // Helper to get color based on intensity

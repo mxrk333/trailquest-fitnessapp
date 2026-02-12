@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { Workout, Hike } from '@repo/shared'
 import { NutritionLog } from '@/services/firestore/nutrition'
 import { RestDay } from '@/services/firestore/restDays'
+import { deleteWorkout } from '@/services/firestore/workouts'
+import { deleteHike } from '@/services/firestore/hikes'
+import { deleteNutritionLog } from '@/services/firestore/nutrition'
+import { deleteRestDay } from '@/services/firestore/restDays'
+import { useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 
 interface ActivityCardProps {
   activity: Workout | Hike | NutritionLog | RestDay
@@ -10,6 +16,9 @@ interface ActivityCardProps {
 
 export function ActivityCard({ activity, type }: ActivityCardProps) {
   const [showDetails, setShowDetails] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const date = new Date(activity.timestamp).toLocaleDateString(undefined, {
     weekday: 'short',
@@ -72,6 +81,59 @@ export function ActivityCard({ activity, type }: ActivityCardProps) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this activity? This cannot be undone.')) return
+
+    setIsDeleting(true)
+    try {
+      const id = (activity as any).id
+      if (!id) {
+        alert('Activity ID not found')
+        return
+      }
+
+      if (type === 'workout') {
+        await deleteWorkout(id)
+        queryClient.invalidateQueries({ queryKey: ['recent-workouts'] })
+        queryClient.invalidateQueries({ queryKey: ['workouts-for-volume'] })
+      } else if (type === 'hike') {
+        await deleteHike(id)
+        queryClient.invalidateQueries({ queryKey: ['analytics-hikes'] })
+        queryClient.invalidateQueries({ queryKey: ['recent-hikes'] })
+      } else if (type === 'nutrition') {
+        await deleteNutritionLog(id)
+        queryClient.invalidateQueries({ queryKey: ['recent-nutrition'] })
+        queryClient.invalidateQueries({ queryKey: ['nutrition-today'] })
+      } else if (type === 'rest') {
+        await deleteRestDay(id)
+        queryClient.invalidateQueries({ queryKey: ['recent-rest-days'] })
+      }
+      setShowDetails(false)
+    } catch (error) {
+      console.error('Error deleting activity:', error)
+      alert('Failed to delete activity')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleEdit = () => {
+    const id = (activity as any).id
+    if (!id) return
+
+    if (type === 'workout') {
+      navigate(`/log-activity?type=workout&id=${id}`)
+    } else if (type === 'hike') {
+      navigate(`/log-activity?type=hike&id=${id}`)
+    } else if (type === 'nutrition') {
+      navigate(`/log-activity?type=nutrition&id=${id}`)
+    } else if (type === 'rest') {
+      navigate(`/log-activity?type=rest&id=${id}`)
+    }
+  }
+
+  const canEdit = true // All activity types now support editing
+
   return (
     <>
       <div
@@ -98,9 +160,29 @@ export function ActivityCard({ activity, type }: ActivityCardProps) {
                 <span className="material-icons text-white text-xl">{getIcon()}</span>
               </div>
               <div>
-                <h3 className="font-bold text-white text-base group-hover:text-primary transition-colors">
-                  {getTitle()}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-white text-base group-hover:text-primary transition-colors">
+                    {getTitle()}
+                  </h3>
+                  {/* Status Badge */}
+                  {(activity as any).status && (activity as any).status !== 'completed' && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        (activity as any).status === 'partial'
+                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                          : (activity as any).status === 'pending'
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      }`}
+                    >
+                      {(activity as any).status === 'partial'
+                        ? 'Partial'
+                        : (activity as any).status === 'pending'
+                          ? 'Pending'
+                          : 'Missed'}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">{date}</p>
               </div>
             </div>
@@ -303,11 +385,9 @@ export function ActivityCard({ activity, type }: ActivityCardProps) {
                     </p>
                   </div>
                   <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 uppercase font-semibold mb-2">
-                      Trail Name
-                    </p>
+                    <p className="text-xs text-slate-500 uppercase font-semibold mb-2">Mountain</p>
                     <p className="text-lg font-bold text-white">
-                      {(activity as Hike).trail || 'N/A'}
+                      {(activity as Hike).mountain || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -361,18 +441,29 @@ export function ActivityCard({ activity, type }: ActivityCardProps) {
                 </div>
               )}
 
-              {/* Edit button placeholder */}
-              <div className="flex gap-3 pt-4 border-t border-white/10">
-                <button className="flex-1 bg-gradient-to-r from-primary to-green-400 hover:from-primary/90 hover:to-green-400/90 text-background-dark font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-primary/30 hover:scale-105 disabled:opacity-50">
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="material-icons text-lg">edit</span>
-                    Edit Activity
-                  </span>
-                </button>
-                <button className="px-6 py-3 bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-semibold rounded-xl transition-all">
-                  <span className="material-icons">delete</span>
-                </button>
-              </div>
+              {/* Edit/Delete buttons */}
+              {canEdit && (
+                <div className="flex gap-3 pt-4 border-t border-white/10">
+                  <button
+                    onClick={handleEdit}
+                    className="flex-1 bg-gradient-to-r from-primary to-green-400 hover:from-primary/90 hover:to-green-400/90 text-background-dark font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-primary/30 hover:scale-105 disabled:opacity-50"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="material-icons text-lg">edit</span>
+                      Edit Activity
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="px-6 py-3 bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-semibold rounded-xl transition-all disabled:opacity-50"
+                  >
+                    <span className="material-icons">
+                      {isDeleting ? 'hourglass_empty' : 'delete'}
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

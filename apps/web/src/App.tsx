@@ -8,13 +8,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TrainerDashboard } from './pages/TrainerDashboard'
 import { ProfileSettings } from './pages/ProfileSettings'
 import { ClientDetailPage } from './pages/ClientDetailPage'
+import { AssignActivity } from './pages/AssignActivity'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { ReadinessCard } from '@/components/dashboard/ReadinessCard'
 import { MuscleHeatmap } from '@/components/dashboard/MuscleHeatmap'
 import { DashboardFeed } from '@/components/dashboard/DashboardFeed'
 import { NutritionWidget } from '@/components/dashboard/NutritionWidget'
-import { AnalyticsPage } from '@/pages/AnalyticsPage'
-import { useAuth } from '@/providers/AuthProvider'
+import { AnalyticsPage } from './pages/AnalyticsPage'
+import { AssignedTasksPage } from './pages/AssignedTasksPage'
+import { TrainerAssignmentsPage } from './pages/TrainerAssignmentsPage'
+import { useAuth } from './providers/AuthProvider'
+import { Toaster } from 'react-hot-toast'
 
 const queryClient = new QueryClient()
 
@@ -35,24 +39,17 @@ function Home() {
         <p className="text-gray-400">Here's your fitness overview</p>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Readiness & Heatmap */}
-        <div className="space-y-6">
-          <ReadinessCard />
-          <MuscleHeatmap />
-        </div>
-
-        {/* Middle Column - Activity Feed */}
-        <div className="lg:col-span-2 space-y-6">
-          <DashboardFeed />
-        </div>
+      {/* Top Row - Stats Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ReadinessCard />
+        <MuscleHeatmap />
       </div>
 
-      {/* Bottom Row - Nutrition */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-        <NutritionWidget />
-      </div>
+      {/* Activity Feed */}
+      <DashboardFeed />
+
+      {/* Nutrition Widget */}
+      <NutritionWidget />
     </div>
   )
 }
@@ -62,6 +59,29 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#1a1f2e',
+                color: '#fff',
+                border: '1px rgba(19, 236, 91, 0.2)',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#13EC5B',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
@@ -79,8 +99,11 @@ export function App() {
               />
               <Route path="/log-activity" element={<LogActivity />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/assigned-tasks" element={<AssignedTasksPage />} />
+              <Route path="/trainer-assignments" element={<TrainerAssignmentsPage />} />
               <Route path="/trainer" element={<TrainerDashboard />} />
               <Route path="/trainer/client/:clientId" element={<ClientDetailPage />} />
+              <Route path="/assign-activity/:clientId" element={<AssignActivity />} />
               <Route path="/settings" element={<ProfileSettings />} />
             </Route>
 

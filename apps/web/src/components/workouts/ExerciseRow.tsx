@@ -58,7 +58,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
   }
 
   return (
-    <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-primary/10 relative overflow-hidden group">
+    <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20 relative overflow-hidden group">
       <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -72,7 +72,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
               value={exercise.name}
               onChange={e => handleNameChange(e.target.value)}
               placeholder="Exercise Name"
-              className="text-lg font-bold text-gray-900 dark:text-white bg-transparent border-none focus:ring-0 p-0 w-full placeholder-gray-500"
+              className="text-lg font-bold text-white bg-transparent border-none focus:ring-0 p-0 w-full placeholder-gray-500"
             />
             <datalist id={`exercise-suggestions-${index}`}>
               {exercisesData.map(ex => (
@@ -104,7 +104,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
       </div>
 
       {/* Sets Header */}
-      <div className="grid grid-cols-10 gap-4 mb-3 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">
+      <div className="grid grid-cols-10 gap-4 mb-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">
         <div className="col-span-1">Set</div>
         <div className="col-span-3">kg</div>
         <div className="col-span-3">Reps</div>
@@ -117,7 +117,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
         {exercise.sets.map((set, setIndex) => (
           <div
             key={setIndex}
-            className="grid grid-cols-10 gap-4 items-center bg-gray-50 dark:bg-surface-darker/50 p-2 rounded-lg border border-transparent hover:border-primary/20 transition-all"
+            className="grid grid-cols-10 gap-4 items-center bg-surface-darker/50 p-2 rounded-lg border border-transparent hover:border-primary/20 transition-all"
           >
             <div className="col-span-1 text-center font-bold text-gray-400">{set.setNumber}</div>
             <div className="col-span-3">
@@ -127,7 +127,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
                 onChange={e =>
                   handleUpdateSet(setIndex, { ...set, weight: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded text-center py-1.5 text-sm font-bold focus:ring-1 focus:ring-primary outline-none text-gray-900 dark:text-white"
+                className="w-full bg-surface-dark border border-gray-700 rounded text-center py-1.5 text-sm font-bold focus:ring-1 focus:ring-primary outline-none text-white"
               />
             </div>
             <div className="col-span-3">
@@ -137,7 +137,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
                 onChange={e =>
                   handleUpdateSet(setIndex, { ...set, reps: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded text-center py-1.5 text-sm font-bold focus:ring-1 focus:ring-primary outline-none text-gray-900 dark:text-white"
+                className="w-full bg-surface-dark border border-gray-700 rounded text-center py-1.5 text-sm font-bold focus:ring-1 focus:ring-primary outline-none text-white"
               />
             </div>
             <div className="col-span-2">
@@ -151,7 +151,7 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
                     rpe: parseFloat(e.target.value) || undefined,
                   })
                 }
-                className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded text-center py-1.5 text-sm font-bold focus:ring-1 focus:ring-primary outline-none text-primary"
+                className="w-full bg-surface-dark border border-gray-700 rounded text-center py-1.5 text-sm font-bold focus:ring-1 focus:ring-primary outline-none text-primary"
               />
             </div>
             <div className="col-span-1 text-center flex justify-center gap-1">

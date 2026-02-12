@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const UserRoleSchema = z.enum(['trainee', 'trainer'])
+export const UserRoleSchema = z.enum(['trainee', 'hiker', 'trainer'])
 export const FitnessLevelSchema = z.enum(['beginner', 'intermediate', 'advanced'])
 
 export const UserSchema = z.object({

@@ -64,7 +64,7 @@ export function LoginForm() {
             type="email"
             placeholder="hiker@trailquest.com"
             disabled={loading}
-            className="block w-full pl-10 pr-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
             {...register('email')}
           />
         </div>
@@ -98,7 +98,7 @@ export function LoginForm() {
             type="password"
             placeholder="••••••••"
             disabled={loading}
-            className="block w-full pl-10 pr-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
             {...register('password')}
           />
         </div>
@@ -172,18 +172,7 @@ export function LoginForm() {
 
       {/* Footer Sign Up Link */}
       <div className="mt-8 text-center">
-        <p className="text-sm text-gray-400">
-          New to TrailQuest?{' '}
-          <Link
-            className="font-bold text-primary hover:text-primary/80 transition-colors ml-1 inline-flex items-center group"
-            to="/sign-up"
-          >
-            Create an Account
-            <span className="material-icons text-base ml-0.5 transform group-hover:translate-x-1 transition-transform">
-              chevron_right
-            </span>
-          </Link>
-        </p>
+        <p className="text-sm text-gray-400"></p>
       </div>
     </form>
   )

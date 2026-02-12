@@ -7,15 +7,26 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    
+
+    function isTrainer() {
+      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userData.role == 'trainer';
+    }
+
     function isTrainerOf(userId) {
       let userData = get(/databases/$(database)/documents/users/$(userId)).data;
       return userData.trainerId == request.auth.uid
-          || userData.allowedTrainers.hasAny([request.auth.uid]);
+          || (userData.allowedTrainers != null && userData.allowedTrainers.hasAny([request.auth.token.email]));
+    }
+
+    function isTrainerOfClient(clientId) {
+      let clientData = get(/databases/$(database)/documents/users/$(clientId)).data;
+      return clientData.trainerId == request.auth.uid ||
+             (clientData.allowedTrainers != null && clientData.allowedTrainers.hasAny([request.auth.token.email]));
     }
     
     // Allow public access to connection_test for verifying connectivity
@@ -29,24 +40,72 @@ service cloud.firestore {
       allow write: if isSignedIn() && isOwner(userId);
     }
 
-    // Workouts collection - trainers can read their clients' workouts
+    // Workouts collection - trainers can read their clients' workouts and their assignments
     match /workouts/{workoutId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        isTrainerOf(resource.data.userId)
+        isTrainerOf(resource.data.userId) ||
+        resource.data.assignedBy == request.auth.uid
       );
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-    }
-
-    // Hikes collection - trainers can read their clients' hikes
-    match /hikes/{hikeId} {
-      allow read: if isSignedIn() && (
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        isTrainerOf(request.resource.data.userId)
+      );
+      allow update, delete: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         isTrainerOf(resource.data.userId)
       );
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Hikes collection - trainers can read their clients' hikes and their assignments
+    match /hikes/{hikeId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId) ||
+        resource.data.assignedBy == request.auth.uid
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        isTrainerOf(request.resource.data.userId)
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId)
+      );
+    }
+
+    // Nutrition collection - trainers can read their clients' nutrition logs and their assignments
+    match /nutrition/{nutritionId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId) ||
+        resource.data.assignedBy == request.auth.uid
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        isTrainerOf(request.resource.data.userId)
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId)
+      );
+    }
+
+    // Rest days collection - trainers can read their clients' rest days and their assignments
+    match /rest_days/{restDayId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId) ||
+        resource.data.assignedBy == request.auth.uid
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        isTrainerOf(request.resource.data.userId)
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId)
+      );
     }
 
     // Default rule for other collections (allow authenticated users)

@@ -23,6 +23,10 @@ export const googleProvider = new GoogleAuthProvider()
 // Firestore
 export const db: Firestore = getFirestore(app)
 
+// Storage
+import { getStorage, FirebaseStorage } from 'firebase/storage'
+export const storage: FirebaseStorage = getStorage(app)
+
 // Analytics (safe)
 export let analytics: Analytics | undefined
 if (typeof window !== 'undefined') {

@@ -1,9 +1,14 @@
 import { useAuth } from '@/providers/AuthProvider'
 import { useReadiness } from '@/hooks/useReadiness'
 
-export function ReadinessCard() {
+interface ReadinessCardProps {
+  userId?: string // Optional: defaults to logged-in user
+}
+
+export function ReadinessCard({ userId }: ReadinessCardProps = {}) {
   const { user } = useAuth()
-  const { score: readinessScore } = useReadiness(user?.uid)
+  const targetUserId = userId || user?.uid
+  const { score: readinessScore } = useReadiness(targetUserId)
 
   const getStatus = () => {
     if (readinessScore >= 75)
