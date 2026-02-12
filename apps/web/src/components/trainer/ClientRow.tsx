@@ -1,6 +1,7 @@
 import { User } from '@repo/shared'
 import { useClientMetrics } from '@/hooks/useClientMetrics'
 import { useNavigate } from 'react-router-dom'
+import { useChat } from '@/providers/ChatProvider'
 
 interface ClientRowProps {
   client: User
@@ -9,6 +10,12 @@ interface ClientRowProps {
 export function ClientRow({ client }: ClientRowProps) {
   const { data: metrics, isLoading } = useClientMetrics(client.uid)
   const navigate = useNavigate()
+  const { openChat } = useChat()
+
+  const handleMessage = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    openChat({ uid: client.uid, displayName: client.displayName || 'Client' })
+  }
 
   if (isLoading) {
     return (
@@ -101,8 +108,17 @@ export function ClientRow({ client }: ClientRowProps) {
         )}
       </td>
       <td className="px-6 py-4 text-right">
-        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="material-icons text-slate-400 text-sm">arrow_forward</span>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={handleMessage}
+            className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-300 hover:scale-110 mr-2"
+            title="Message Client"
+          >
+            <span className="material-icons">chat</span>
+          </button>
+          <span className="material-icons text-slate-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+            arrow_forward
+          </span>
         </div>
       </td>
     </tr>

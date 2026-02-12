@@ -7,11 +7,14 @@ export interface UserProfile {
   uid: string
   email: string
   displayName?: string
-  role?: 'trainee' | 'trainer' | 'hiker'
+  role?: 'trainee' | 'trainer' | 'hiker' | 'admin'
+  isApproved?: boolean
   trainerId?: string // ID of assigned trainer
+  pendingTrainerId?: string // ID of requested trainer
   age?: number
   weight?: number
   height?: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createdAt: any
   allowedTrainers?: string[]
 }

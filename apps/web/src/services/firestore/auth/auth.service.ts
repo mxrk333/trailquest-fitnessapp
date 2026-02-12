@@ -30,6 +30,7 @@ export const signUpWithEmail = async (
       email: userCredential.user.email,
       displayName: name,
       role: role,
+      isApproved: role === 'trainer' ? false : true,
       age: age || null,
       weight: weight || null,
       height: height || null,

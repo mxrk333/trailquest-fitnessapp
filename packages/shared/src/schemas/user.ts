@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const UserRoleSchema = z.enum(['trainee', 'hiker', 'trainer'])
+export const UserRoleSchema = z.enum(['trainee', 'hiker', 'trainer', 'admin'])
 export const FitnessLevelSchema = z.enum(['beginner', 'intermediate', 'advanced'])
 
 export const UserSchema = z.object({
@@ -9,7 +9,9 @@ export const UserSchema = z.object({
   displayName: z.string().optional(),
   photoURL: z.string().url().optional(),
   role: UserRoleSchema.optional(), // Optional initially, set during onboarding
+  isApproved: z.boolean().optional(), // For trainers: true if approved by admin
   trainerId: z.string().optional(), // ID of the assigned trainer
+  pendingTrainerId: z.string().optional(), // ID of trainer requested by trainee
   fitnessLevel: FitnessLevelSchema.optional(),
   age: z.number().optional(),
   weight: z.number().optional(),

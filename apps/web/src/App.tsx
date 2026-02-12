@@ -3,6 +3,7 @@ import { Signup } from './pages/Signup'
 import { Login } from './pages/Login'
 import { LogActivity } from './pages/LogActivity'
 import { AuthProvider } from './providers/AuthProvider'
+import { ChatProvider } from './providers/ChatProvider'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TrainerDashboard } from './pages/TrainerDashboard'
@@ -22,10 +23,20 @@ import { Toaster } from 'react-hot-toast'
 
 const queryClient = new QueryClient()
 
+import { AdminDashboard } from './pages/AdminDashboard'
+import { PendingApproval } from './pages/PendingApproval'
+
 function Home() {
   const { profile } = useAuth()
 
+  if (profile?.role === 'admin') {
+    return <Navigate to="/admin" replace />
+  }
+
   if (profile?.role === 'trainer') {
+    if (profile.isApproved === false) {
+      return <Navigate to="/pending-approval" replace />
+    }
     return <Navigate to="/trainer" replace />
   }
 
@@ -58,7 +69,8 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
+        <ChatProvider>
+          <Router>
           <Toaster
             position="top-right"
             toastOptions={{
@@ -97,6 +109,8 @@ export function App() {
                   </DashboardLayout>
                 }
               />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/pending-approval" element={<PendingApproval />} />
               <Route path="/log-activity" element={<LogActivity />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/assigned-tasks" element={<AssignedTasksPage />} />
@@ -111,6 +125,7 @@ export function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
+        </ChatProvider>
       </AuthProvider>
     </QueryClientProvider>
   )

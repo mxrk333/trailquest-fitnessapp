@@ -1,29 +1,91 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
 import { getTrainerClients } from '@/services/firestore/trainers'
-import { User } from '@repo/shared'
+import { User, UserSchema } from '@repo/shared'
 import { ClientRow } from '@/components/trainer/ClientRow'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteField,
+  arrayUnion,
+} from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { toast } from 'react-hot-toast'
 
 export function TrainerDashboard() {
   const { user } = useAuth()
   const [clients, setClients] = useState<User[]>([])
+  const [requests, setRequests] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadClients() {
-      if (!user) return
-      try {
-        const clientList = await getTrainerClients(user.uid)
-        setClients(clientList)
-      } catch (error) {
-        console.error('Failed to load clients:', error)
-      } finally {
-        setLoading(false)
-      }
+  const fetchData = async () => {
+    if (!user) return
+    setLoading(true)
+    try {
+      // Fetch Clients
+      const clientList = await getTrainerClients(user.uid)
+      setClients(clientList)
+
+      // Fetch Requests
+      const requestsQuery = query(
+        collection(db, 'users'),
+        where('pendingTrainerId', '==', user.uid)
+      )
+      const snapshot = await getDocs(requestsQuery)
+      const requestsList: User[] = []
+      snapshot.forEach(doc => {
+        // Safe parsing with schema if possible, or simple cast
+        requestsList.push({ uid: doc.id, ...doc.data() } as User)
+      })
+      setRequests(requestsList)
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+    } finally {
+      setLoading(false)
     }
-    loadClients()
+  }
+
+  useEffect(() => {
+    fetchData()
   }, [user])
+
+  const handleApprove = async (trainee: User) => {
+    if (!user) return
+    const toastId = toast.loading('Approving request...')
+    try {
+      await updateDoc(doc(db, 'users', trainee.uid), {
+        trainerId: user.uid,
+        pendingTrainerId: deleteField(),
+        allowedTrainers: arrayUnion(user.email || ''),
+      })
+      toast.success('Request approved!', { id: toastId })
+      fetchData() // Refresh list
+    } catch (error) {
+      console.error('Error approving request:', error)
+      toast.error('Failed to approve request', { id: toastId })
+    }
+  }
+
+  const handleReject = async (trainee: User) => {
+    if (!window.confirm(`Reject request from ${trainee.displayName || 'this user'}?`)) return
+
+    const toastId = toast.loading('Rejecting request...')
+    try {
+      await updateDoc(doc(db, 'users', trainee.uid), {
+        pendingTrainerId: deleteField(),
+      })
+      toast.success('Request rejected', { id: toastId })
+      fetchData() // Refresh list
+    } catch (error) {
+      console.error('Error rejecting request:', error)
+      toast.error('Failed to reject request', { id: toastId })
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -33,6 +95,48 @@ export function TrainerDashboard() {
           <h1 className="text-3xl font-bold text-white mb-2">Trainer Dashboard</h1>
           <p className="text-gray-400">Manage and monitor your clients' progress</p>
         </div>
+
+        {/* Pending Requests Section */}
+        {requests.length > 0 && (
+          <div className="bg-gradient-to-r from-yellow-900/10 to-transparent border border-yellow-500/20 rounded-2xl p-6 backdrop-blur-sm">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <span className="material-icons text-yellow-500">notifications_active</span>
+              Pending Requests
+            </h2>
+            <div className="grid gap-4">
+              {requests.map(req => (
+                <div
+                  key={req.uid}
+                  className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                      <span className="material-icons text-yellow-500">person</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-white">{req.displayName || 'Unnamed User'}</p>
+                      <p className="text-sm text-gray-400">{req.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleReject(req)}
+                      className="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 font-medium transition-colors"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleApprove(req)}
+                      className="px-4 py-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 font-medium transition-colors"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
