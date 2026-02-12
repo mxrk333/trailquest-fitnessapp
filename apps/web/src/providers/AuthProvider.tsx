@@ -7,7 +7,7 @@ export interface UserProfile {
   uid: string
   email: string
   displayName?: string
-  role?: 'trainee' | 'trainer'
+  role?: 'trainee' | 'trainer' | 'hiker'
   trainerId?: string // ID of assigned trainer
   age?: number
   weight?: number

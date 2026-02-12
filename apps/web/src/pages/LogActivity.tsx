@@ -18,8 +18,7 @@ export function LogActivity() {
   )
   const { profile } = useAuth()
 
-  const canAccessHikes =
-    profile?.role === 'trainer' || !profile?.role || profile?.role === 'trainee'
+  const canAccessHikes = profile?.role === 'hiker' || profile?.role === 'trainer'
 
   const tabs = [
     { id: 'workout' as const, label: 'Gym Workout', icon: 'fitness_center' },

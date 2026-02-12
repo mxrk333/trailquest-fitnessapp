@@ -10,6 +10,8 @@ import {
   Tooltip,
   Legend,
   Filler,
+  LineController,
+  BarController,
 } from 'chart.js'
 import { useQuery } from '@tanstack/react-query'
 import { getRecentWorkouts } from '@/services/firestore/workouts'
@@ -25,7 +27,9 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  LineController,
+  BarController
 )
 
 interface VolumeTrendChartProps {
