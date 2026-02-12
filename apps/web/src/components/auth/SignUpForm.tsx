@@ -127,7 +127,7 @@ export function SignUpForm() {
               type="text"
               placeholder="Alex Venture"
               disabled={loading}
-              className="block w-full pl-10 pr-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              className="block w-full pl-10 pr-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
               {...register('name')}
             />
           </div>
@@ -153,7 +153,7 @@ export function SignUpForm() {
               type="email"
               placeholder="alex@trailquest.com"
               disabled={loading}
-              className="block w-full pl-10 pr-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              className="block w-full pl-10 pr-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
               {...register('email')}
             />
           </div>
@@ -179,7 +179,7 @@ export function SignUpForm() {
               type="password"
               placeholder="••••••••"
               disabled={loading}
-              className="block w-full pl-10 pr-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              className="block w-full pl-10 pr-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
               {...register('password')}
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
@@ -208,7 +208,7 @@ export function SignUpForm() {
               type="number"
               placeholder="25"
               disabled={loading}
-              className="mt-1 block w-full px-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              className="mt-1 block w-full px-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
               {...register('age')}
             />
           </div>
@@ -226,7 +226,7 @@ export function SignUpForm() {
               type="number"
               placeholder="75"
               disabled={loading}
-              className="mt-1 block w-full px-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              className="mt-1 block w-full px-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
               {...register('weight')}
             />
           </div>
@@ -244,7 +244,7 @@ export function SignUpForm() {
               type="number"
               placeholder="180"
               disabled={loading}
-              className="mt-1 block w-full px-3 py-3 bg-input-bg border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
+              className="mt-1 block w-full px-3 py-3 bg-surface-dark/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 sm:text-sm"
               {...register('height')}
             />
           </div>
@@ -257,7 +257,7 @@ export function SignUpForm() {
           <input
             id="terms"
             type="checkbox"
-            className="h-4 w-4 text-primary focus:ring-primary border-white/10 rounded bg-input-bg"
+            className="h-4 w-4 text-primary focus:ring-primary border-white/10 rounded bg-surface-dark/50"
             {...register('terms')}
           />
         </div>

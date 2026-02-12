@@ -27,6 +27,8 @@ export default {
         'primary-dark': '#0ea640',
         'strain-high': '#ef4444',
         'strain-med': '#f59e0b',
+        'input-bg': '#0d1c12', // Dark input background
+        'card-dark': '#152e1e', // Dark card background
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',

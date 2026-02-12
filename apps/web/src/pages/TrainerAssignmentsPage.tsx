@@ -6,6 +6,9 @@ import { getTrainerNutritionAssignments } from '@/services/firestore/nutrition'
 import { getTrainerRestDayAssignments } from '@/services/firestore/restDays'
 import { ActivityCard } from '@/components/dashboard/ActivityCard'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { User } from '@repo/shared'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export function TrainerAssignmentsPage() {
   const { user } = useAuth()
@@ -76,6 +79,47 @@ export function TrainerAssignmentsPage() {
 
   console.log('📋 Pending:', pendingAssignments.length, 'Completed:', completedAssignments.length)
 
+  // Fetch user data for all unique userIds
+  const uniqueUserIds = Array.from(new Set(allAssignments.map(a => a.data.userId).filter(Boolean)))
+
+  const { data: usersMap = new Map<string, User>(), isLoading: usersLoading } = useQuery({
+    queryKey: ['assignment-users', uniqueUserIds],
+    queryFn: async () => {
+      const userMap = new Map<string, User>()
+      await Promise.all(
+        uniqueUserIds.map(async userId => {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', userId))
+            if (userDoc.exists()) {
+              userMap.set(userId, { uid: userDoc.id, ...userDoc.data() } as User)
+            }
+          } catch (error) {
+            console.error(`Failed to fetch user ${userId}:`, error)
+          }
+        })
+      )
+      return userMap
+    },
+    enabled: uniqueUserIds.length > 0,
+  })
+
+  // Group assignments by trainee
+  const assignmentsByTrainee = allAssignments.reduce(
+    (acc, assignment) => {
+      const userId = assignment.data.userId
+      if (!userId) return acc
+
+      if (!acc[userId]) {
+        acc[userId] = []
+      }
+      acc[userId].push(assignment)
+      return acc
+    },
+    {} as Record<string, typeof allAssignments>
+  )
+
+  const isLoadingAll = isLoading || usersLoading
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -84,63 +128,91 @@ export function TrainerAssignmentsPage() {
           <p className="text-gray-400">Track all activities you've assigned to your clients.</p>
         </div>
 
-        {isLoading ? (
+        {isLoadingAll ? (
           <div className="flex justify-center py-20">
             <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
           </div>
         ) : allAssignments.length > 0 ? (
           <div className="space-y-8">
-            {/* Pending Assignments */}
-            {pendingAssignments.length > 0 && (
-              <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-yellow-500/20 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                      <span className="material-icons text-yellow-400">pending_actions</span>
-                    </div>
-                    Pending Tasks
-                  </h2>
-                  <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                    {pendingAssignments.length} Awaiting Completion
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  {pendingAssignments.map((activity, idx) => (
-                    <ActivityCard
-                      key={`pending-${idx}`}
-                      activity={activity.data}
-                      type={activity.type}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            {Object.entries(assignmentsByTrainee).map(([userId, traineeAssignments]) => {
+              const trainee = usersMap.get(userId)
+              const traineeName = trainee?.displayName || trainee?.email || 'Unknown User'
+              const traineePending = traineeAssignments.filter(a => a.data.status === 'pending')
+              const traineeCompleted = traineeAssignments.filter(a => a.data.status === 'completed')
 
-            {/* Completed Assignments */}
-            {completedAssignments.length > 0 && (
-              <div className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-primary/20 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <span className="material-icons text-primary">check_circle</span>
+              return (
+                <div
+                  key={userId}
+                  className="bg-gradient-to-br from-surface-dark via-surface-dark to-surface-dark/50 border border-primary/20 rounded-3xl p-8 backdrop-blur-xl shadow-2xl"
+                >
+                  {/* Trainee Header */}
+                  <div className="flex items-center gap-4 mb-6 pb-4 border-b border-white/10">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="material-icons text-primary text-2xl">person</span>
                     </div>
-                    Completed Tasks
-                  </h2>
-                  <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                    {completedAssignments.length} Completed
-                  </span>
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold text-white">{traineeName}</h2>
+                      <p className="text-sm text-slate-400">
+                        {traineeAssignments.length} total assignment
+                        {traineeAssignments.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {traineePending.length > 0 && (
+                        <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                          {traineePending.length} Pending
+                        </span>
+                      )}
+                      {traineeCompleted.length > 0 && (
+                        <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                          {traineeCompleted.length} Done
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pending Tasks for this Trainee */}
+                  {traineePending.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span className="material-icons text-yellow-400 text-xl">
+                          pending_actions
+                        </span>
+                        Pending Tasks
+                      </h3>
+                      <div className="space-y-4">
+                        {traineePending.map((activity, idx) => (
+                          <ActivityCard
+                            key={`${userId}-pending-${idx}`}
+                            activity={activity.data}
+                            type={activity.type}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Completed Tasks for this Trainee */}
+                  {traineeCompleted.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span className="material-icons text-primary text-xl">check_circle</span>
+                        Completed Tasks
+                      </h3>
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                        {traineeCompleted.map((activity, idx) => (
+                          <ActivityCard
+                            key={`${userId}-completed-${idx}`}
+                            activity={activity.data}
+                            type={activity.type}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                  {completedAssignments.map((activity, idx) => (
-                    <ActivityCard
-                      key={`completed-${idx}`}
-                      activity={activity.data}
-                      type={activity.type}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+              )
+            })}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-surface-dark border border-white/10 rounded-3xl">

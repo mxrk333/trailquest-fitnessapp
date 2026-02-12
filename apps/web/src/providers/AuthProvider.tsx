@@ -6,12 +6,14 @@ import { auth, db } from '@/lib/firebase'
 export interface UserProfile {
   uid: string
   email: string
-  displayName: string
-  role: 'trainee' | 'hiker' | 'trainer'
+  displayName?: string
+  role?: 'trainee' | 'trainer'
+  trainerId?: string // ID of assigned trainer
   age?: number
   weight?: number
   height?: number
   createdAt: any
+  allowedTrainers?: string[]
 }
 
 interface AuthContextType {
@@ -25,7 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
-  refreshProfile: async () => {}
+  refreshProfile: async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
