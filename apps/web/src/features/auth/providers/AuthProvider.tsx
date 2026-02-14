@@ -17,6 +17,7 @@ export interface UserProfile {
   onboardingCompleted?: boolean
   certifications?: string // Trainer credentials
   specialization?: string // Trainer area of expertise
+  subscriptionTier?: 'free' | 'pro'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createdAt: any
   allowedTrainers?: string[]
@@ -26,14 +27,18 @@ interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  profileLoading: boolean
   refreshProfile: () => Promise<void>
+  updateProfileLocally: (data: Partial<UserProfile>) => void
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  profileLoading: false,
   refreshProfile: async () => {},
+  updateProfileLocally: () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -42,6 +47,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
+
+  const updateProfileLocally = (data: Partial<UserProfile>) => {
+    setProfile(prev => (prev ? { ...prev, ...data } : null))
+  }
 
   const refreshProfile = async () => {
     if (user) {
@@ -62,13 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser)
 
       if (currentUser) {
+        setProfileLoading(true)
         try {
           const userDoc = await getDoc(doc(db, 'users', currentUser.uid))
           if (userDoc.exists()) {
             setProfile(userDoc.data() as UserProfile)
+          } else {
+            setProfile(null)
           }
         } catch (error) {
           console.error('Error fetching user profile:', error)
+        } finally {
+          setProfileLoading(false)
         }
       } else {
         setProfile(null)
@@ -81,7 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, profile, loading, profileLoading, refreshProfile, updateProfileLocally }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   )

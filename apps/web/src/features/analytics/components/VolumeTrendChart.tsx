@@ -12,6 +12,7 @@ import {
   Filler,
   LineController,
   BarController,
+  TooltipItem,
 } from 'chart.js'
 import { useQuery } from '@tanstack/react-query'
 import { getRecentWorkouts } from '@/features/workouts/services/workouts'
@@ -158,8 +159,8 @@ export function VolumeTrendChart({ userId }: VolumeTrendChartProps = {}) {
         borderWidth: 1,
         padding: 12,
         callbacks: {
-          label: (context: any) => {
-            if (context.dataset.label.includes('Gym')) return `Volume: ${context.parsed.y} kg`
+          label: (context: TooltipItem<'line' | 'bar'>) => {
+            if (context.dataset.label?.includes('Gym')) return `Volume: ${context.parsed.y} kg`
             return `Elevation: ${context.parsed.y} m`
           },
         },
@@ -187,7 +188,7 @@ export function VolumeTrendChart({ userId }: VolumeTrendChartProps = {}) {
         ticks: {
           color: '#64748b',
           font: { size: 11 },
-          callback: (value: any) => `${value}kg`,
+          callback: (value: string | number) => `${value}kg`,
         },
         title: {
           display: false,
@@ -204,7 +205,7 @@ export function VolumeTrendChart({ userId }: VolumeTrendChartProps = {}) {
         ticks: {
           color: '#f97316', // Orange matching hikes
           font: { size: 11 },
-          callback: (value: any) => `${value}m`,
+          callback: (value: string | number) => `${value}m`,
         },
         title: {
           display: false,

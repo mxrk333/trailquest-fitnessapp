@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/features/auth/providers/AuthProvider'
 import { getTrainerClients } from '@/features/trainer/services/trainers'
-import { User, UserSchema } from '@repo/shared'
+import { User } from '@repo/shared'
 import { ClientRow } from '@/features/trainer/components/ClientRow'
 import { DashboardLayout } from '@/shared/components/layout/DashboardLayout'
 import {

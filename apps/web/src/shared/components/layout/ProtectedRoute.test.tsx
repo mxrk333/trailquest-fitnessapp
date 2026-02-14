@@ -30,13 +30,29 @@ describe('ProtectedRoute', () => {
   })
 
   it('shows loading state while auth is initializing', () => {
-    mockUseAuth.mockReturnValue({ user: null, profile: null, loading: true })
+    mockUseAuth.mockReturnValue({ user: null, profile: null, loading: true, profileLoading: false })
+    renderWithRouter('/dashboard')
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+  })
+
+  it('shows loading state while profile is still loading for authenticated user', () => {
+    mockUseAuth.mockReturnValue({
+      user: { uid: '123', email: 'test@example.com' },
+      profile: null,
+      loading: false,
+      profileLoading: true,
+    })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Loading...')).toBeInTheDocument()
   })
 
   it('redirects to /login when user is not authenticated', () => {
-    mockUseAuth.mockReturnValue({ user: null, profile: null, loading: false })
+    mockUseAuth.mockReturnValue({
+      user: null,
+      profile: null,
+      loading: false,
+      profileLoading: false,
+    })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Login Page')).toBeInTheDocument()
   })
@@ -46,6 +62,7 @@ describe('ProtectedRoute', () => {
       user: { uid: '123', email: 'test@example.com' },
       profile: null,
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Onboarding Page')).toBeInTheDocument()
@@ -56,6 +73,7 @@ describe('ProtectedRoute', () => {
       user: { uid: '123', email: 'test@example.com' },
       profile: { uid: '123', email: 'test@example.com', role: 'hiker', onboardingCompleted: false },
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Onboarding Page')).toBeInTheDocument()
@@ -66,6 +84,7 @@ describe('ProtectedRoute', () => {
       user: { uid: '123', email: 'test@example.com' },
       profile: { uid: '123', email: 'test@example.com', role: 'hiker', onboardingCompleted: true },
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
@@ -76,6 +95,7 @@ describe('ProtectedRoute', () => {
       user: { uid: '123', email: 'test@example.com' },
       profile: { uid: '123', email: 'test@example.com', role: 'trainee', age: 25 },
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
@@ -86,6 +106,7 @@ describe('ProtectedRoute', () => {
       user: { uid: '123', email: 'test@example.com' },
       profile: null,
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/onboarding')
     expect(screen.getByText('Onboarding Page')).toBeInTheDocument()
@@ -102,6 +123,7 @@ describe('ProtectedRoute', () => {
         onboardingCompleted: false,
       },
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Onboarding Page')).toBeInTheDocument()
@@ -118,6 +140,7 @@ describe('ProtectedRoute', () => {
         onboardingCompleted: true,
       },
       loading: false,
+      profileLoading: false,
     })
     renderWithRouter('/dashboard')
     expect(screen.getByText('Dashboard')).toBeInTheDocument()

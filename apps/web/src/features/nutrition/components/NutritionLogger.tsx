@@ -77,7 +77,7 @@ export function NutritionLogger({ mode = 'log', targetUserId }: NutritionLoggerP
         notes,
         status: (mode === 'assign' ? 'pending' : 'completed') as 'pending' | 'completed' | 'missed',
         assignedBy: mode === 'assign' ? user.uid : editNutrition?.assignedBy || null,
-      } as any
+      } as any // eslint-disable-line @typescript-eslint/no-explicit-any
 
       if (editId) {
         await updateNutritionLog(editId, nutritionData)

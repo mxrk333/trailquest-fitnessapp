@@ -75,7 +75,7 @@ export function RestDayLogger({ mode = 'log', targetUserId }: RestDayLoggerProps
         notes,
         status: (mode === 'assign' ? 'pending' : 'completed') as 'pending' | 'completed' | 'missed',
         assignedBy: mode === 'assign' ? user.uid : editRest?.assignedBy || null,
-      } as any
+      } as any // eslint-disable-line @typescript-eslint/no-explicit-any
 
       if (editId) {
         await updateRestDay(editId, restData)

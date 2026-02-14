@@ -50,13 +50,6 @@ export function ExerciseRow({ index, exercise, onUpdate, onRemove }: ExerciseRow
     onUpdate(index, { ...exercise, sets: newSets })
   }
 
-  const handleRemoveSet = (setIndex: number) => {
-    const newSets = exercise.sets
-      .filter((_, i) => i !== setIndex)
-      .map((set, i) => ({ ...set, setNumber: i + 1 }))
-    onUpdate(index, { ...exercise, sets: newSets })
-  }
-
   return (
     <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20 relative overflow-hidden group">
       <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>

@@ -2,10 +2,10 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/providers/AuthProvider'
 
 export function ProtectedRoute() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, profileLoading } = useAuth()
   const location = useLocation()
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
         Loading...
@@ -27,8 +27,7 @@ export function ProtectedRoute() {
   // 2. Profile exists but onboarding not completed
   // Existing users with age set are grandfathered in
   const isOnboarded =
-    profile?.onboardingCompleted === true ||
-    (profile != null && profile.age != null)
+    profile?.onboardingCompleted === true || (profile != null && profile.age != null)
 
   if (!profile || !isOnboarded) {
     return <Navigate to="/onboarding" replace />

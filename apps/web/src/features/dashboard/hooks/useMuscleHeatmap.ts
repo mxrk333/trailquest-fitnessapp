@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRecentWorkouts } from '@/features/workouts/services/workouts'
 import { getRecentHikes } from '@/features/hikes/services/hikes'
-import { Workout, Hike } from '@repo/shared'
 
 type MuscleIntensity = Record<string, number>
 
@@ -64,7 +63,7 @@ export const useMuscleHeatmap = (userId: string | undefined) => {
 
       // 4. Normalize to 0-1 range for visualization
       // Find max value to scale everything relative to it (or cap at 1.0)
-      const maxStrain = Math.max(...Object.values(intensities), 1.0) // Avoid divide by zero
+      // const maxStrain = Math.max(...Object.values(intensities), 1.0) // Avoid divide by zero
 
       Object.keys(intensities).forEach(key => {
         // We can either scale relative to max (heatmap style)

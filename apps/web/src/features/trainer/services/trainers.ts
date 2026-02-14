@@ -1,6 +1,7 @@
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore'
 import { User } from '@repo/shared'
+import { getSubscriptionTier } from '@/features/subscription/services/subscription'
 
 const USERS_COLLECTION = 'users'
 
@@ -42,7 +43,14 @@ export async function getTrainerClients(trainerId: string): Promise<User[]> {
 }
 
 export async function addClientToTrainer(trainerId: string, clientEmail: string) {
-  // 1. Find user by email
+  // 1. Check tier limit before adding
+  const clients = await getTrainerClients(trainerId)
+  const tier = await getSubscriptionTier(trainerId)
+  if (tier !== 'pro' && clients.length >= 1) {
+    throw new Error('FREE_TIER_LIMIT: Upgrade to Pro to add more clients.')
+  }
+
+  // 2. Find user by email
   const q = query(collection(db, USERS_COLLECTION), where('email', '==', clientEmail))
   const snapshot = await getDocs(q)
 
@@ -53,12 +61,12 @@ export async function addClientToTrainer(trainerId: string, clientEmail: string)
   const clientDoc = snapshot.docs[0]
   const client = clientDoc.data() as User
 
-  // 2. Check if already assigned
+  // 3. Check if already assigned
   if (client.trainerId === trainerId) {
     return // Already assigned
   }
 
-  // 3. Update user with trainerId
+  // 4. Update user with trainerId
   await updateDoc(doc(db, USERS_COLLECTION, clientDoc.id), {
     trainerId: trainerId,
   })

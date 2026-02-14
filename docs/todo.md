@@ -3,24 +3,28 @@
 _Goal: Establish the monorepo's connection to Firebase and define the data contract._
 
 - [✅] **1.1 Firebase Project Initialization**
-- [✅] Create Google Firebase project (Spark or Blaze plan).
-- [✅] Enable **Firestore** in "Test Mode" (initially).
-- [✅] Enable **Firebase Auth** (Email/Password & Google).
-- [✅] Generate `firebaseConfig` and add to `.env.local` in `apps/web`.
+
+  - [✅] Create Google Firebase project (Spark or Blaze plan).
+  - [✅] Enable **Firestore** in "Test Mode" (initially).
+  - [✅] Enable **Firebase Auth** (Email/Password & Google).
+  - [✅] Generate `firebaseConfig` and add to `.env.local` in `apps/web`.
 
 - [✅] **1.2 Monorepo Wiring**
-- [✅] Install `firebase` and `react-firebase-hooks` in `apps/web`.
-- [✅] Create `apps/web/src/lib/firebase.ts` (Initialize App, Auth, and Firestore).
-- [✅] Configure `packages/shared` for shared types/schemas (Zod).
+
+  - [✅] Install `firebase` and `react-firebase-hooks` in `apps/web`.
+  - [✅] Create `apps/web/src/lib/firebase.ts` (Initialize App, Auth, and Firestore).
+  - [✅] Configure `packages/shared` for shared types/schemas (Zod).
 
 - [✅] **1.3 Auth & Role-Based Onboarding**
-- [✅] Implement `SignUp` and `Login` pages using **Shadcn UI** & **Zod**.
-- [✅] Create `PostSignUp` page for role selection (Trainee vs. Trainer).
-- [✅] Create User document in Firestore upon registration.
+
+  - [✅] Implement `SignUp` and `Login` pages using **Shadcn UI** & **Zod**.
+  - [✅] Create `PostSignUp` page for role selection (Trainee vs. Trainer).
+  - [✅] Create User document in Firestore upon registration.
 
 - [✅] **1.4 Global State & Guarding**
-- [✅] Implement `AuthProvider` (using Context API + Firebase Auth).
-- [✅] Protect private routes (redirect unauthenticated users to Login).
+  - [✅] Implement `AuthProvider` (using Context API + Firebase Auth).
+  - [✅] Protect private routes (redirect unauthenticated users to Login).
+  - [✅] Fix `profileLoading` race condition in `ProtectedRoute`.
 
 ---
 
@@ -29,20 +33,33 @@ _Goal: Establish the monorepo's connection to Firebase and define the data contr
 _Goal: The "Input" phase. Getting workout and hike data into the cloud._
 
 - [✅] **2.1 The Workout Engine**
-- [✅] Build `WorkoutLogger` component (Multi-step form).
-- [✅] Feature: Add/Remove Exercise rows.
-- [✅] Feature: Searchable exercise database (local JSON list: "Squat", "Bench", etc.).
-- [✅] Implement `handleSaveWorkout`: Validate via Zod → Push to Firestore `/workouts` collection.
+
+  - [✅] Build `WorkoutLogger` component (Multi-step form).
+  - [✅] Feature: Add/Remove Exercise rows.
+  - [✅] Feature: Searchable exercise database (local JSON list: "Squat", "Bench", etc.).
+  - [✅] Implement `handleSaveWorkout`: Validate via Zod → Push to Firestore `/workouts` collection.
+  - [✅] Edit existing workouts via query params (`/log-activity?type=workout&id=...`).
+  - [✅] Delete workouts from activity feed.
 
 - [✅] **2.2 The Hiking Tracker**
-- [✅] Build `HikeLogger` UI (Distance, Time, Elevation Gain).
-- [✅] Logic: Create a "Muscle Contribution" mapper (e.g., If Elevation > 500ft, add +20% load to Calves/Glutes).
-- [✅] Save hike to `/hikes` collection with a `type: "hike"` flag.
 
-- [✅] **2.3 The History Feed**
-- [✅] Create a `DashboardFeed` component.
-- [✅] Use `useCollectionData` (from `react-firebase-hooks`) for real-time list updates.
-- [✅] Design "Activity Cards" in Tailwind that distinguish between a Gym session and a Trail session.
+  - [✅] Build `HikeLogger` UI (Distance, Time, Elevation Gain, Mountain name).
+  - [✅] Logic: Create a "Muscle Contribution" mapper (e.g., If Elevation > 500ft, add +20% load to Calves/Glutes).
+  - [✅] Save hike to `/hikes` collection with a `type: "hike"` flag.
+  - [✅] Date field for logging past hikes.
+
+- [✅] **2.3 Rest Day Logging**
+
+  - [✅] Build `RestDayLogger` UI (Complete Rest / Active Recovery).
+  - [✅] Save to `/rest_days` collection.
+
+- [✅] **2.4 The History Feed**
+  - [✅] Create a `DashboardFeed` component.
+  - [✅] Design "Activity Cards" in Tailwind distinguishing Gym, Trail, Nutrition, and Rest sessions.
+  - [✅] Flat layout without nested box-in-box pattern.
+  - [✅] Clickable cards with detail modal + edit/delete actions.
+  - [✅] "Assigned to You" section for pending trainer tasks.
+  - [✅] Scrollable feed with max-height constraint.
 
 ---
 
@@ -50,21 +67,30 @@ _Goal: The "Input" phase. Getting workout and hike data into the cloud._
 
 _Goal: The "Output" phase. Turning boring data into visual motivation._
 
-- [ ] **3.1 SVG Heatmap Component**
-- [ ] Create `MuscleMap.tsx` in `packages/ui`.
-- [ ] Map SVG IDs to muscle names (e.g., `id="quads"`, `id="lats"`).
-- [ ] Create a prop `intensities: Record<MuscleName, number>` (0 to 1) to drive fill colors.
+- [✅] **3.1 SVG Heatmap Component**
 
-- [ ] **3.2 The Aggregator Logic**
-- [ ] Create a hook `useCalculateMuscleLoad`.
-- [ ] Logic: Fetch last 7 days of activities → Sum occurrences of muscle groups → Normalize to a 0–1 scale.
+  - [✅] Create `MuscleHeatmap.tsx` dashboard component.
+  - [✅] Front/Back body toggle with SVG muscle regions.
+  - [✅] Map SVG IDs to muscle names and drive fill colors from intensity data.
 
-- [ ] **3.3 Recovery & Decay**
-- [ ] Implement "Time Decay": If a muscle hasn't been hit in 48 hours, reduce its heatmap intensity by 30% per day.
+- [✅] **3.2 The Aggregator Logic**
 
-- [ ] **3.4 Personal Bests (PBs)**
-- [ ] Create a "Trophy Room" component.
-- [ ] Logic: Scan Firestore `workouts` for the max `weight` per `exerciseName`.
+  - [✅] Logic: Fetch last 7 days of activities → Sum occurrences of muscle groups → Normalize to a 0–1 scale.
+  - [✅] Include hike-sourced muscle data in aggregation.
+
+- [✅] **3.3 Recovery & Decay**
+
+  - [✅] Implement "Time Decay": Reduce heatmap intensity based on time since last workout.
+  - [✅] `ReadinessCard` component with Trail Readiness score (0–100) and recovery insights.
+
+- [✅] **3.4 Analytics Page**
+
+  - [✅] `VolumeTrendChart` with weekly volume trends.
+  - [✅] `AnalyticsPage` dashboard accessible via sidebar.
+
+- [✅] **3.5 Personal Bests (PBs)**
+  - [✅] Create a "Trophy Room" component.
+  - [✅] Logic: Scan Firestore `workouts` for the max `weight` per `exerciseName`.
 
 ---
 
@@ -72,22 +98,45 @@ _Goal: The "Output" phase. Turning boring data into visual motivation._
 
 _Goal: The "Collaboration" phase. Connecting two distinct user types._
 
-- [ ] **4.1 Invitation System**
-- [ ] Trainer generates a 6-digit `InviteCode` (stored in `/invites`).
-- [ ] Trainee enters code → Firestore update: Set `trainee.trainerId = trainer.uid`.
+- [✅] **4.1 Trainer–Trainee Linking**
 
-- [ ] **4.2 The Trainer's Birds-Eye View**
-- [ ] Build `TrainerDashboard`: A list of all trainees linked to the current user.
-- [ ] Each list item shows a mini-heatmap and "Last Active" timestamp.
+  - [✅] Trainer adds client by email (`addClientToTrainer` service).
+  - [✅] Pending approval flow: trainee sees pending trainer request, can accept/reject.
+  - [ ] _(Optional)_ 6-digit `InviteCode` system via `/invites` collection.
 
-- [ ] **4.3 The "Deep Dive" Client View**
-- [ ] Allow trainers to click a trainee and view _their_ dashboard as read-only.
+- [✅] **4.2 The Trainer's Birds-Eye View**
 
-- [ ] **4.4 Airtight Security (Firestore Rules)**
-- [ ] Draft `firestore.rules`:
-- [ ] Trainees can read/write their own docs.
-- [ ] Trainers can read docs where `data.trainerId == request.auth.uid`.
-- [ ] Block all other cross-user access.
+  - [✅] Build `TrainerDashboard`: List of all trainees linked to the current user.
+  - [✅] `ClientRow` component with client details.
+  - [✅] Pending client requests with approve/reject actions.
+
+- [✅] **4.3 The "Deep Dive" Client View**
+
+  - [✅] `ClientDetailPage`: Trainer views trainee dashboard as read-only.
+  - [✅] Trainee's heatmap, recent activity, and nutrition visible to trainer.
+
+- [✅] **4.4 Trainer Activity Assignment**
+
+  - [✅] `AssignActivity` page: Trainer assigns workouts, hikes, nutrition, rest days to trainees.
+  - [✅] `TrainerAssignmentsPage`: View all assigned tasks and their statuses.
+
+- [✅] **4.5 Firestore Security Rules**
+  - [✅] Trainees can read/write their own docs.
+  - [✅] Trainers can read/write docs where `trainerId == request.auth.uid`.
+  - [✅] Messages collection secured to participants only.
+  - [✅] Review and harden catch-all rule (previously allowed all authenticated access — now removed).
+
+---
+
+## 💬 Phase 4.5: Real-Time Chat
+
+_Goal: Enable communication between trainers and trainees._
+
+- [✅] **4.5.1 Chat System**
+  - [✅] `ChatProvider` context for real-time messaging.
+  - [✅] `ChatDrawer` UI component (slide-out panel).
+  - [✅] Contact list for choosing conversations.
+  - [✅] Messages stored in Firestore `/messages` collection.
 
 ---
 
@@ -95,16 +144,29 @@ _Goal: The "Collaboration" phase. Connecting two distinct user types._
 
 _Goal: Total lifestyle tracking requested by the trainer._
 
-- [ ] **5.1 Simple Macro Tracker**
-- [ ] Log Protein, Carbs, Fats, and Calories per day.
-- [ ] Visual: A circular progress bar for "Protein Goal" achievement.
+- [✅] **5.1 Simple Macro Tracker**
+
+  - [✅] Log Protein, Carbs, Fats, Calories, and Water per meal.
+  - [✅] `NutritionWidget` on dashboard with live daily totals.
+  - [✅] Edit/delete nutrition logs from activity feed.
 
 - [ ] **5.2 Nutritionix API (Optional/Advanced)**
-- [ ] Setup `fetch` call to search food and get instant macro data.
 
-- [ ] **5.3 Daily Habit Check-ins**
-- [ ] Simple toggle list: [ ] 4L Water, [ ] 8h Sleep, [ ] Stretching.
-- [ ] Store these in a `/dailyHabits` sub-collection under the user.
+  - [ ] Setup `fetch` call to search food and get instant macro data.
+
+- [✅] **5.3 Daily Habit Check-ins**
+  - [✅] Simple toggle list: [ ] 4L Water, [ ] 8h Sleep, [ ] Stretching.
+  - [✅] Store these in a `/dailyHabits` sub-collection under the user.
+
+---
+
+## 🛡️ Phase 5.5: Admin Panel
+
+_Goal: Platform-level administration and oversight._
+
+- [✅] **5.5.1 Admin Dashboard**
+  - [✅] `AdminDashboard` page for platform management.
+  - [✅] `PendingApproval` page for reviewing user accounts.
 
 ---
 
@@ -112,19 +174,22 @@ _Goal: Total lifestyle tracking requested by the trainer._
 
 _Goal: Turning a project into a product._
 
-- [ ] **6.1 Premium Tiers**
-- [ ] Logic: Free users can only have 1 trainer/client. Pro users are unlimited.
-- [ ] Integrate **Stripe Checkout** (Client-side redirect).
+- [✅] **6.1 Premium Tiers**
 
-- [ ] **6.2 Performance & Indexing**
-- [ ] Add Firestore indexes for complex queries (e.g., `where trainerId == X order by timestamp desc`).
+  - [✅] Logic: Free users can only have 1 trainer/client. Pro users are unlimited.
+  - [✅] Mock payment flow (Firestore-backed, no real Stripe).
 
-- [ ] **6.3 Final Polish**
-- [ ] Add "Empty States" (Illustrations for when a user has no workouts yet).
-- [ ] Mobile Responsiveness: Ensure the Muscle Map looks good on a phone screen.
+- [✅] **6.2 Performance & Indexing**
 
-- [ ] **6.4 Production Deploy**
-- [ ] Run `pnpm build` in the monorepo.
-- [ ] Deploy to Firebase Hosting via the GitHub Action provided in your boilerplate.
+  - [✅] Add Firestore indexes for complex queries (e.g., `where trainerId == X order by timestamp desc`).
+  - [ ] Aggregate monthly stats into `monthly_summary` sub-collection (optional/future).
 
----
+- [✅] **6.3 Final Polish**
+
+  - [✅] Add "Empty States" (Illustrations for when a user has no workouts yet).
+  - [✅] Mobile Responsiveness: Muscle Map uses SVG viewBox for responsive scaling.
+  - [✅] Review UI color consistency across all pages.
+
+- [✅] **6.4 Production Deploy**
+  - [✅] Run `pnpm build` in the monorepo — passes with 0 errors.
+  - [ ] Deploy to Firebase Hosting via the GitHub Action provided in your boilerplate.

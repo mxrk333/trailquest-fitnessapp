@@ -1,10 +1,9 @@
 import { AuthLayout } from '@/shared/components/layout/AuthLayout'
-import { useAuth } from '@/features/auth/providers/AuthProvider'
+
 import { logOut } from '@/features/auth/services/auth.service'
 import { useNavigate } from 'react-router-dom'
 
 export function PendingApproval() {
-  const { profile } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = async () => {

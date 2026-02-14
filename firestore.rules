@@ -124,9 +124,30 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
     }
 
-    // Default rule for other collections (allow authenticated users)
-    match /{document=**} {
-       allow read, write: if isSignedIn();
+    // Daily Habits collection - owner read/write, trainer read
+    match /dailyHabits/{habitId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isTrainerOf(resource.data.userId)
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
+
+    // Invites collection - trainer creates, trainee reads/updates
+    match /invites/{inviteId} {
+      allow read: if isSignedIn() && (
+        resource.data.trainerId == request.auth.uid ||
+        resource.data.traineeEmail == request.auth.token.email
+      );
+      allow create: if isSignedIn() && request.resource.data.trainerId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.trainerId == request.auth.uid ||
+        resource.data.traineeEmail == request.auth.token.email
+      );
+      allow delete: if isSignedIn() && resource.data.trainerId == request.auth.uid;
+    }
+
+    // Deny all other collections by default (no catch-all)
   }
 }

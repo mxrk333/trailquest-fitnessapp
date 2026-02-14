@@ -1,15 +1,22 @@
 import { DashboardLayout } from '@/shared/components/layout/DashboardLayout'
 import { VolumeTrendChart } from '@/features/analytics/components/VolumeTrendChart'
+import { TrophyRoom } from '@/features/analytics/components/TrophyRoom'
 import { useAuth } from '@/features/auth/providers/AuthProvider'
 import { useQuery } from '@tanstack/react-query'
 import { getRecentWorkouts } from '@/features/workouts/services/workouts'
 import { getRecentHikes } from '@/features/hikes/services/hikes'
 import { getTrainerClients } from '@/features/trainer/services/trainers'
 import { useState, useEffect } from 'react'
-import { User } from '@repo/shared'
+import { User, Workout, Hike } from '@repo/shared'
+// Subscription feature
+import { FeatureGate } from '@repo/ui'
+import { useSubscription } from '@/hooks/useSubscription'
+import { useNavigate } from 'react-router-dom'
 
 export function AnalyticsPage() {
   const { user, profile } = useAuth()
+  const { isPro } = useSubscription()
+  const navigate = useNavigate()
   const [clients, setClients] = useState<User[]>([])
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const isTrainer = profile?.role === 'trainer'
@@ -223,14 +230,34 @@ export function AnalyticsPage() {
           </div>
         </div>
 
+        {/* Personal Bests / Trophy Room */}
+        {/* Personal Bests / Trophy Room */}
+        {targetUserId && (
+          <FeatureGate
+            isLocked={!isPro}
+            title="Trophy Room"
+            description="Track your personal bests"
+            onAction={() => navigate('/upgrade')}
+          >
+            <TrophyRoom userId={targetUserId} />
+          </FeatureGate>
+        )}
+
         {/* Training Load Chart */}
-        <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
-          <div className="mb-4">
-            <h3 className="text-lg font-bold text-white mb-1">Training Load</h3>
-            <p className="text-sm text-gray-400">Gym Volume & Hike Elevation</p>
+        <FeatureGate
+          isLocked={!isPro}
+          title="Advanced Analytics"
+          description="View training load trends"
+          onAction={() => navigate('/upgrade')}
+        >
+          <div className="bg-surface-dark border border-primary/10 p-6 rounded-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-white mb-1">Training Load</h3>
+              <p className="text-sm text-gray-400">Gym Volume & Hike Elevation</p>
+            </div>
+            <VolumeTrendChart userId={targetUserId || undefined} />
           </div>
-          <VolumeTrendChart userId={targetUserId || undefined} />
-        </div>
+        </FeatureGate>
 
         {/* Exercise Performance Table */}
         <div className="bg-surface-dark border border-primary/10 rounded-xl overflow-hidden">
@@ -267,33 +294,29 @@ export function AnalyticsPage() {
                             </span>
                             <span className="text-white font-medium">
                               {isWorkout
-                                ? (activity as any).name
-                                : `Hike (${(activity as any).distance}km)`}
+                                ? (activity as Workout).name
+                                : `Hike (${(activity as Hike).distance}km)`}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right text-white font-bold">
                           {isWorkout
-                            ? `${(activity as any).exercises
-                                .reduce((sum: number, ex: any) => {
+                            ? `${(activity as Workout).exercises
+                                .reduce((sum, ex) => {
                                   return (
                                     sum +
                                     ex.sets
-                                      .filter((s: any) => s.completed)
-                                      .reduce(
-                                        (setSum: number, set: any) =>
-                                          setSum + set.weight * set.reps,
-                                        0
-                                      )
+                                      .filter(s => s.completed)
+                                      .reduce((setSum, set) => setSum + set.weight * set.reps, 0)
                                   )
                                 }, 0)
                                 .toFixed(0)} kg`
-                            : `${(activity as any).distance} km`}
+                            : `${(activity as Hike).distance} km`}
                         </td>
                         <td className="px-6 py-4 text-right text-gray-400 text-sm">
                           {isWorkout
-                            ? `${(activity as any).exercises.length} exercises`
-                            : `${(activity as any).elevationGain}m gain`}
+                            ? `${(activity as Workout).exercises.length} exercises`
+                            : `${(activity as Hike).elevationGain}m gain`}
                         </td>
                       </tr>
                     )

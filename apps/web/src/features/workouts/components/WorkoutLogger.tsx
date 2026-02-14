@@ -31,7 +31,7 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
   ])
 
   // Fetch workout data if editing
-  const { data: editWorkout, isLoading: isLoadingWorkout } = useQuery({
+  const { data: editWorkout } = useQuery({
     queryKey: ['workout', editId],
     queryFn: async () => {
       if (!editId) return null
@@ -78,26 +78,6 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
     // if (exercises.length === 1) return
     const newExercises = exercises.filter((_, i) => i !== index)
     setExercises(newExercises)
-  }
-
-  // Calculate workout status based on completed sets
-  const calculateWorkoutStatus = (exercises: Exercise[]): 'completed' | 'partial' | 'skipped' => {
-    const validExercises = exercises.filter(ex => ex.name.trim() !== '')
-    if (validExercises.length === 0) return 'skipped'
-
-    let totalSets = 0
-    let completedSets = 0
-
-    validExercises.forEach(ex => {
-      ex.sets.forEach(set => {
-        totalSets++
-        if (set.completed) completedSets++
-      })
-    })
-
-    if (completedSets === 0) return 'skipped'
-    if (completedSets === totalSets) return 'completed'
-    return 'partial'
   }
 
   const handleSave = async () => {
@@ -187,28 +167,29 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
       <div className="lg:col-span-2 space-y-6">
         {/* Workout Header Card */}
         <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20">
+          import {(Button, Input, Badge)} from '@repo/ui' // ... (imports remain) // ...
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
                 Workout Name
               </label>
-              <input
+              <Input
                 type="text"
                 value={workoutName}
                 onChange={e => setWorkoutName(e.target.value)}
                 placeholder="e.g. Leg Day"
-                className="w-full bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                className="bg-surface-darker border-gray-700 text-white placeholder-gray-500 focus:ring-primary h-12"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                 Date & Time
               </label>
-              <input
+              <Input
                 type="datetime-local"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full bg-surface-darker border border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none accent-primary"
+                className="bg-surface-darker border-gray-700 text-white focus:ring-primary accent-primary h-12"
               />
             </div>
           </div>
@@ -226,9 +207,10 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
         ))}
 
         {/* Add Exercise Button */}
-        <button
+        <Button
           onClick={handleAddExercise}
-          className="w-full border-2 border-dashed border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all group h-32"
+          variant="outline"
+          className="w-full border-2 border-dashed border-gray-700 rounded-xl h-32 flex flex-col items-center justify-center gap-2 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all group"
         >
           <div className="h-10 w-10 rounded-full bg-surface-darker group-hover:bg-primary/20 flex items-center justify-center transition-colors">
             <span className="material-icons text-2xl group-hover:text-primary transition-colors">
@@ -236,7 +218,7 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
             </span>
           </div>
           <span className="font-medium">Add Exercise</span>
-        </button>
+        </Button>
       </div>
 
       {/* Right Column: Summary & Save */}
@@ -250,13 +232,13 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
           {/* Status Badge */}
           <div className="mb-4 flex items-center justify-between">
             <span className="text-gray-300">Status</span>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+            <Badge
+              className={`px-3 py-1 text-xs font-bold uppercase ${
                 stats.status === 'completed'
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  ? 'bg-green-500/20 text-green-400 border-green-500/30'
                   : stats.status === 'partial'
-                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                    ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
               }`}
             >
               {stats.status === 'completed'
@@ -264,7 +246,7 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
                 : stats.status === 'partial'
                   ? '⚠ Partial'
                   : '— Empty'}
-            </span>
+            </Badge>
           </div>
 
           <div className="space-y-4">
@@ -287,12 +269,12 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
               <span className="text-xs font-semibold text-gray-500 mb-3 block">MUSCLE LOAD</span>
               <div className="flex gap-2 flex-wrap">
                 {stats.muscleLoad.map(m => (
-                  <span
+                  <Badge
                     key={m.name}
-                    className="px-3 py-1 bg-primary/20 text-white rounded-full text-xs font-bold capitalize"
+                    className="px-3 py-1 bg-primary/20 text-white border-none text-xs font-bold capitalize hover:bg-primary/30"
                   >
                     {m.name} {m.percentage}%
-                  </span>
+                  </Badge>
                 ))}
               </div>
               <div className="mt-4 h-2 w-full bg-surface-darker rounded-full overflow-hidden flex">
@@ -309,10 +291,10 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
 
           {/* Actions */}
           <div className="mt-8 space-y-3">
-            <button
+            <Button
               onClick={handleSave}
               disabled={loading}
-              className="w-full bg-primary hover:bg-green-400 text-background-dark font-bold py-3.5 px-6 rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-green-400 text-background-dark font-bold h-14 rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></span>
@@ -321,7 +303,7 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
               ) : (
                 `Save as ${stats.status === 'completed' ? 'Complete' : stats.status === 'partial' ? 'Partial' : 'Empty'}`
               )}
-            </button>
+            </Button>
             <p className="text-xs text-gray-500 text-center">
               {stats.status === 'partial' && '💡 You can continue this workout later'}
               {stats.status === 'completed' && '✅ All sets completed!'}

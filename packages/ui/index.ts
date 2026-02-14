@@ -15,6 +15,7 @@
 // Custom Components
 export { Header } from './components/Header'
 export { Counter } from './components/Counter'
+export { FeatureGate } from './components/FeatureGate'
 
 // Shadcn UI Components
 export { Button, buttonVariants } from './components/ui/button'
@@ -28,6 +29,7 @@ export {
 } from './components/ui/card'
 export { Input } from './components/ui/input'
 export { Label } from './components/ui/label'
+export { Badge, badgeVariants } from './components/ui/badge'
 
 // Utilities
 export { cn } from './lib/utils'

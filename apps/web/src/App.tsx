@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 
@@ -23,6 +23,13 @@ import { MuscleHeatmap } from '@/features/dashboard/components/MuscleHeatmap'
 import { DashboardFeed } from '@/features/dashboard/components/DashboardFeed'
 import { NutritionWidget } from '@/features/dashboard/components/NutritionWidget'
 
+// Habits feature
+import { HabitCheckins } from '@/features/habits/components/HabitCheckins'
+
+// Subscription feature
+import { FeatureGate } from '@repo/ui'
+import { useSubscription } from '@/hooks/useSubscription'
+
 // Activity feature
 import { LogActivity } from '@/features/activity/pages/LogActivity'
 import { AssignedTasksPage } from '@/features/activity/pages/AssignedTasksPage'
@@ -36,6 +43,9 @@ import { TrainerAssignmentsPage } from '@/features/trainer/pages/TrainerAssignme
 // Analytics feature
 import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage'
 
+// Subscription feature
+import { UpgradePage } from '@/features/subscription/pages/UpgradePage'
+
 // Admin feature
 import { AdminDashboard } from '@/features/admin/pages/AdminDashboard'
 import { PendingApproval } from '@/features/admin/pages/PendingApproval'
@@ -47,6 +57,8 @@ const queryClient = new QueryClient()
 
 function Home() {
   const { profile } = useAuth()
+  const { isPro } = useSubscription()
+  const navigate = useNavigate()
 
   if (profile?.role === 'admin') {
     return <Navigate to="/admin" replace />
@@ -78,8 +90,19 @@ function Home() {
       {/* Activity Feed */}
       <DashboardFeed />
 
-      {/* Nutrition Widget */}
-      <NutritionWidget />
+      {/* Bottom Row - Nutrition & Habits */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <NutritionWidget />
+        <FeatureGate
+          isLocked={!isPro}
+          title="Daily Habit Tracking"
+          description="Available on Pro plan"
+          actionLabel="⚡ Upgrade to Pro"
+          onAction={() => navigate('/upgrade')}
+        >
+          <HabitCheckins />
+        </FeatureGate>
+      </div>
     </div>
   )
 }
@@ -90,61 +113,62 @@ export function App() {
       <AuthProvider>
         <ChatProvider>
           <Router>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#1a1f2e',
-                color: '#fff',
-                border: '1px rgba(19, 236, 91, 0.2)',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#13EC5B',
-                  secondary: '#fff',
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#1a1f2e',
+                  color: '#fff',
+                  border: '1px rgba(19, 236, 91, 0.2)',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
+                success: {
+                  iconTheme: {
+                    primary: '#13EC5B',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+                error: {
+                  iconTheme: {
+                    primary: '#EF4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
-            {/* Protected routes with Outlet */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route
-                path="/"
-                element={
-                  <DashboardLayout>
-                    <Home />
-                  </DashboardLayout>
-                }
-              />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/pending-approval" element={<PendingApproval />} />
-              <Route path="/log-activity" element={<LogActivity />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/assigned-tasks" element={<AssignedTasksPage />} />
-              <Route path="/trainer-assignments" element={<TrainerAssignmentsPage />} />
-              <Route path="/trainer" element={<TrainerDashboard />} />
-              <Route path="/trainer/client/:clientId" element={<ClientDetailPage />} />
-              <Route path="/assign-activity/:clientId" element={<AssignActivity />} />
-              <Route path="/settings" element={<ProfileSettings />} />
-            </Route>
+              {/* Protected routes with Outlet */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route
+                  path="/"
+                  element={
+                    <DashboardLayout>
+                      <Home />
+                    </DashboardLayout>
+                  }
+                />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/pending-approval" element={<PendingApproval />} />
+                <Route path="/log-activity" element={<LogActivity />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/assigned-tasks" element={<AssignedTasksPage />} />
+                <Route path="/trainer-assignments" element={<TrainerAssignmentsPage />} />
+                <Route path="/trainer" element={<TrainerDashboard />} />
+                <Route path="/trainer/client/:clientId" element={<ClientDetailPage />} />
+                <Route path="/assign-activity/:clientId" element={<AssignActivity />} />
+                <Route path="/settings" element={<ProfileSettings />} />
+                <Route path="/upgrade" element={<UpgradePage />} />
+              </Route>
 
-            {/* Catch all - redirect to home */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Router>
+              {/* Catch all - redirect to home */}
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Router>
         </ChatProvider>
       </AuthProvider>
     </QueryClientProvider>

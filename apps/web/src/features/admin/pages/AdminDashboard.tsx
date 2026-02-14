@@ -1,7 +1,5 @@
-import { DashboardLayout } from '@/shared/components/layout/DashboardLayout'
-import { useAuth } from '@/features/auth/providers/AuthProvider'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { UserProfile } from '@/features/auth/providers/AuthProvider'
 import { toast } from 'react-hot-toast'
@@ -18,7 +16,6 @@ interface UserStats {
 type Tab = 'overview' | 'trainers' | 'users'
 
 export function AdminDashboard() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState<UserStats>({
     total: 0,
@@ -254,8 +251,8 @@ export function AdminDashboard() {
                         <td className="px-6 py-4 text-gray-400">{trainer.email}</td>
                         <td className="px-6 py-4 text-gray-500">-</td>
                         <td className="px-6 py-4 text-gray-500 text-sm">
-                          {(trainer.createdAt as any)?.toDate
-                            ? (trainer.createdAt as any).toDate().toLocaleDateString()
+                          {trainer.createdAt instanceof Timestamp
+                            ? trainer.createdAt.toDate().toLocaleDateString()
                             : 'Unknown'}
                         </td>
                       </tr>
@@ -301,8 +298,8 @@ export function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-gray-500 text-sm">
-                          {(user.createdAt as any)?.toDate
-                            ? (user.createdAt as any).toDate().toLocaleDateString()
+                          {user.createdAt instanceof Timestamp
+                            ? user.createdAt.toDate().toLocaleDateString()
                             : 'Unknown'}
                         </td>
                       </tr>
