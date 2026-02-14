@@ -5,6 +5,7 @@ import { ExerciseRow } from './ExerciseRow'
 import { Exercise } from '@repo/shared'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { Button, Input, Badge } from '@repo/ui'
 
 interface WorkoutLoggerProps {
   mode?: 'log' | 'assign'
@@ -167,7 +168,6 @@ export function WorkoutLogger({ mode = 'log', targetUserId }: WorkoutLoggerProps
       <div className="lg:col-span-2 space-y-6">
         {/* Workout Header Card */}
         <div className="bg-surface-dark/80 rounded-xl p-6 shadow-sm border border-primary/20">
-          import {(Button, Input, Badge)} from '@repo/ui' // ... (imports remain) // ...
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
