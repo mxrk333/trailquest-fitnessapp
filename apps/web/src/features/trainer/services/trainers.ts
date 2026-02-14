@@ -7,32 +7,37 @@ const USERS_COLLECTION = 'users'
 
 export async function getTrainerClients(trainerId: string): Promise<User[]> {
   try {
+    const allDocs = new Map<string, User>()
+
     // Query 1: Users assigned to this trainer via 'trainerId'
-    const assignedQuery = query(
-      collection(db, USERS_COLLECTION),
-      where('trainerId', '==', trainerId)
-    )
-    const assignedSnapshot = await getDocs(assignedQuery)
+    try {
+      const assignedQuery = query(
+        collection(db, USERS_COLLECTION),
+        where('trainerId', '==', trainerId)
+      )
+      const assignedSnapshot = await getDocs(assignedQuery)
+      assignedSnapshot.docs.forEach(d => allDocs.set(d.id, { uid: d.id, ...d.data() } as User))
+    } catch (err) {
+      console.warn('Error fetching assigned clients:', err)
+    }
 
     // Query 2: Users who have granted access via 'allowedTrainers' array
     // Fetch the trainer's email to query by allowedTrainers (which stores emails)
-    const trainerDocRef = doc(db, USERS_COLLECTION, trainerId)
-    const trainerDoc = await getDoc(trainerDocRef)
-    const trainerEmail = trainerDoc.data()?.email
+    try {
+      const trainerDocRef = doc(db, USERS_COLLECTION, trainerId)
+      const trainerDoc = await getDoc(trainerDocRef)
+      const trainerEmail = trainerDoc.data()?.email
 
-    const allDocs = new Map<string, User>()
-
-    // Add assigned clients
-    assignedSnapshot.docs.forEach(d => allDocs.set(d.id, { uid: d.id, ...d.data() } as User))
-
-    // Add clients who granted access via email
-    if (trainerEmail) {
-      const allowedQuery = query(
-        collection(db, USERS_COLLECTION),
-        where('allowedTrainers', 'array-contains', trainerEmail)
-      )
-      const allowedSnapshot = await getDocs(allowedQuery)
-      allowedSnapshot.docs.forEach(d => allDocs.set(d.id, { uid: d.id, ...d.data() } as User))
+      if (trainerEmail) {
+        const allowedQuery = query(
+          collection(db, USERS_COLLECTION),
+          where('allowedTrainers', 'array-contains', trainerEmail)
+        )
+        const allowedSnapshot = await getDocs(allowedQuery)
+        allowedSnapshot.docs.forEach(d => allDocs.set(d.id, { uid: d.id, ...d.data() } as User))
+      }
+    } catch (err) {
+      console.warn('Error fetching allowed clients:', err)
     }
 
     return Array.from(allDocs.values())

@@ -3,7 +3,7 @@ import { useAuth } from '@/features/auth/providers/AuthProvider'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { doc, updateDoc, deleteField, arrayRemove } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, deleteField, arrayRemove } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 // DISABLED: Photo upload imports (Firebase Storage not enabled)
 // Uncomment when Storage is enabled:
@@ -11,6 +11,7 @@ import { updateProfile } from 'firebase/auth'
 // import { db, storage } from '@/lib/firebase'
 import { db } from '@/lib/firebase'
 import { getAllTrainers, getTrainerClients } from '@/features/trainer/services/trainers'
+import { User } from '@repo/shared'
 import { useQuery } from '@tanstack/react-query'
 import { DashboardLayout } from '@/shared/components/layout/DashboardLayout'
 import toast from 'react-hot-toast'
@@ -38,30 +39,40 @@ export function ProfileSettings() {
     queryFn: getAllTrainers,
   })
 
-  // Fetch assigned trainer info if trainee has a trainerId
-  const { data: assignedTrainer, isLoading: isLoadingAssignedTrainer } = useQuery({
+  // Fetch assigned trainer info directly by ID
+  const {
+    data: assignedTrainer,
+    isLoading: isLoadingAssignedTrainer,
+    isError: isErrorAssignedTrainer,
+  } = useQuery({
     queryKey: ['assigned-trainer', profile?.trainerId],
     queryFn: async () => {
       if (!profile?.trainerId) return null
-      const trainer = trainers.find(t => t.uid === profile.trainerId)
-      return trainer || null
+      const trainerDoc = await getDoc(doc(db, 'users', profile.trainerId))
+      if (!trainerDoc.exists()) return null
+      return { uid: trainerDoc.id, ...trainerDoc.data() } as User
     },
-    enabled: !!profile?.trainerId && trainers.length > 0,
+    enabled: !!profile?.trainerId,
   })
 
-  // Fetch info for pending trainer if exists
+  // Fetch pending trainer info directly by ID
   const { data: pendingTrainer, isLoading: isLoadingPendingTrainer } = useQuery({
     queryKey: ['pending-trainer', profile?.pendingTrainerId],
     queryFn: async () => {
       if (!profile?.pendingTrainerId) return null
-      const trainer = trainers.find(t => t.uid === profile.pendingTrainerId)
-      return trainer || null
+      const trainerDoc = await getDoc(doc(db, 'users', profile.pendingTrainerId))
+      if (!trainerDoc.exists()) return null
+      return { uid: trainerDoc.id, ...trainerDoc.data() } as User
     },
-    enabled: !!profile?.pendingTrainerId && trainers.length > 0,
+    enabled: !!profile?.pendingTrainerId,
   })
 
   // Fetch trainees if user is a trainer
-  const { data: myTrainees = [], isLoading: isLoadingTrainees } = useQuery({
+  const {
+    data: myTrainees = [],
+    isLoading: isLoadingTrainees,
+    isError: isErrorTrainees,
+  } = useQuery({
     queryKey: ['my-trainees', user?.uid],
     queryFn: async () => {
       if (!user?.uid) return []
@@ -325,6 +336,10 @@ export function ProfileSettings() {
 
             {isLoadingTrainees ? (
               <div className="text-sm text-slate-400">Loading trainees...</div>
+            ) : isErrorTrainees ? (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
+                Failed to load trainees. Please try again later.
+              </div>
             ) : myTrainees.length === 0 ? (
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 text-center">
                 <span className="material-icons text-slate-600 text-5xl mb-3">person_off</span>
@@ -381,6 +396,16 @@ export function ProfileSettings() {
 
             {isLoadingAssignedTrainer ? (
               <div className="text-sm text-slate-400">Loading trainer info...</div>
+            ) : isErrorAssignedTrainer ? (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm mb-4">
+                Failed to load trainer details.
+                <button
+                  onClick={onRemoveTrainer}
+                  className="mt-2 text-xs underline hover:text-red-300 block"
+                >
+                  Force remove trainer connection
+                </button>
+              </div>
             ) : assignedTrainer ? (
               <div className="space-y-4">
                 <div className="bg-black/20 border border-purple-500/30 rounded-xl p-6">
@@ -413,6 +438,16 @@ export function ProfileSettings() {
             ) : (
               <div className="bg-black/20 border border-white/5 rounded-xl p-6 text-center">
                 <p className="text-slate-400 text-sm">Trainer information not available</p>
+                <p className="text-slate-500 text-xs mt-1 mb-3">
+                  The trainer's account may have been deleted or you don't have permission to view
+                  it.
+                </p>
+                <button
+                  onClick={onRemoveTrainer}
+                  className="text-red-400 hover:text-red-300 text-xs underline"
+                >
+                  Force remove connection
+                </button>
               </div>
             )}
           </div>

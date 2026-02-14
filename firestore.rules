@@ -34,13 +34,28 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Users collection - trainers can read their clients' profiles
+    // Users collection rules
     match /users/{userId} {
       allow read: if isSignedIn() && (
+        // 1. User reading their own profile
         isOwner(userId) || 
-        isTrainerOf(userId) ||
-        get(/databases/$(database)/documents/users/$(userId)).data.role == 'trainer'
+        
+        // 2. Trainer reading their client's profile (Direct Assignment)
+        resource.data.trainerId == request.auth.uid ||
+        
+        // 3. Trainer reading client who granted access (Ad-hoc)
+        (resource.data.allowedTrainers != null && resource.data.allowedTrainers.hasAny([request.auth.token.email])) ||
+        
+        // 4. Trainer reading pending requests
+        resource.data.pendingTrainerId == request.auth.uid ||
+
+        // 5. Trainee reading their assigned trainer's profile
+        // (We lookup the requesting user's doc to see if this userId is their trainer)
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.trainerId == userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.pendingTrainerId == userId
       );
+      
+      // Allow users to update only their own data
       allow write: if isSignedIn() && isOwner(userId);
     }
 

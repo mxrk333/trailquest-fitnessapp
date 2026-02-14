@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useChat } from '@/features/chat/providers/ChatProvider'
 import { useAuth } from '@/features/auth/providers/AuthProvider'
 import { useQuery } from '@tanstack/react-query'
-import { getTrainerClients, getAllTrainers } from '@/features/trainer/services/trainers'
+import { getTrainerClients } from '@/features/trainer/services/trainers'
+import { User } from '@repo/shared'
 
 export function ChatDrawer() {
   const { user, profile } = useAuth()
@@ -24,9 +25,15 @@ export function ChatDrawer() {
         if (profile.role === 'trainer') {
           return await getTrainerClients(user.uid)
         } else if ((profile.role === 'trainee' || profile.role === 'hiker') && profile.trainerId) {
-          const trainers = await getAllTrainers()
-          const myTrainer = trainers.find(t => t.uid === profile.trainerId)
-          return myTrainer ? [myTrainer] : []
+          // Direct fetch for assigned trainer
+          const { doc, getDoc } = await import('firebase/firestore')
+          const { db } = await import('@/lib/firebase')
+          const trainerDoc = await getDoc(doc(db, 'users', profile.trainerId))
+
+          if (trainerDoc.exists()) {
+            return [{ uid: trainerDoc.id, ...trainerDoc.data() } as User]
+          }
+          return []
         }
       } catch (err) {
         console.error('Error fetching contacts', err)
@@ -108,7 +115,9 @@ export function ChatDrawer() {
                       <p className="font-semibold text-white truncate group-hover:text-primary transition-colors text-sm md:text-base">
                         {contact.displayName || 'Unknown User'}
                       </p>
-                      <p className="text-xs text-gray-400 truncate capitalize">{contact.role || 'User'}</p>
+                      <p className="text-xs text-gray-400 truncate capitalize">
+                        {contact.role || 'User'}
+                      </p>
                     </div>
                     <span className="material-icons text-gray-600 group-hover:text-primary text-sm flex-shrink-0">
                       chevron_right
@@ -138,7 +147,9 @@ export function ChatDrawer() {
                 {(activeChatUser.displayName?.charAt(0) || 'U').toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-white font-bold text-sm md:text-base truncate">{activeChatUser.displayName}</h3>
+                <h3 className="text-white font-bold text-sm md:text-base truncate">
+                  {activeChatUser.displayName}
+                </h3>
                 <p className="text-[10px] md:text-xs text-green-400 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse"></span>
                   24h Chat Active
@@ -188,7 +199,10 @@ export function ChatDrawer() {
                             })
                           : 'Sending...'}
                         {msg.expiresAt && (
-                          <span className="material-icons text-[9px] md:text-[10px]" title="Expires in 24h">
+                          <span
+                            className="material-icons text-[9px] md:text-[10px]"
+                            title="Expires in 24h"
+                          >
                             timer
                           </span>
                         )}
@@ -202,7 +216,10 @@ export function ChatDrawer() {
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSend} className="p-3 md:p-4 border-t border-white/10 bg-surface-dark flex-shrink-0">
+          <form
+            onSubmit={handleSend}
+            className="p-3 md:p-4 border-t border-white/10 bg-surface-dark flex-shrink-0"
+          >
             <div className="relative">
               <input
                 type="text"

@@ -94,7 +94,7 @@ function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <NutritionWidget />
         <FeatureGate
-          isLocked={!isPro}
+          isLocked={!isPro && !profile?.trainerId}
           title="Daily Habit Tracking"
           description="Available on Pro plan"
           actionLabel="⚡ Upgrade to Pro"

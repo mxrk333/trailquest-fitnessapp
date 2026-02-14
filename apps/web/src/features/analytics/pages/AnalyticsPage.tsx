@@ -234,7 +234,7 @@ export function AnalyticsPage() {
         {/* Personal Bests / Trophy Room */}
         {targetUserId && (
           <FeatureGate
-            isLocked={!isPro}
+            isLocked={!isPro && !isTrainer && !profile?.trainerId}
             title="Trophy Room"
             description="Track your personal bests"
             onAction={() => navigate('/upgrade')}
@@ -245,7 +245,7 @@ export function AnalyticsPage() {
 
         {/* Training Load Chart */}
         <FeatureGate
-          isLocked={!isPro}
+          isLocked={!isPro && !isTrainer && !profile?.trainerId}
           title="Advanced Analytics"
           description="View training load trends"
           onAction={() => navigate('/upgrade')}

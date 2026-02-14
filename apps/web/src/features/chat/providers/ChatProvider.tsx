@@ -1,14 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  addDoc,
-  Timestamp,
-} from 'firebase/firestore'
+import { collection, query, where, onSnapshot, addDoc, Timestamp } from 'firebase/firestore'
 import { useAuth } from '@/features/auth/providers/AuthProvider'
 import { Message } from '@repo/shared'
 import { toast } from 'react-hot-toast'
@@ -98,42 +90,44 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const q = query(
-      collection(db, 'messages'),
-      where('participants', 'array-contains', user.uid),
-      orderBy('createdAt', 'asc')
-    )
+    const q = query(collection(db, 'messages'), where('participants', 'array-contains', user.uid))
 
-    const unsubscribe = onSnapshot(q, snapshot => {
-      let count = 0
-      const now = new Date().getTime()
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        let count = 0
+        const now = new Date().getTime()
 
-      snapshot.forEach(doc => {
-        const data = doc.data()
-        const expiry = data.expiresAt?.toMillis() || 0
+        snapshot.forEach(doc => {
+          const data = doc.data()
+          const expiry = data.expiresAt?.toMillis() || 0
 
-        // Only count messages from others that haven't expired
-        if (data.senderId !== user.uid && expiry > now) {
-          // Check if this message was read
-          const otherUserId = data.participants.find((uid: string) => uid !== user.uid)
+          // Only count messages from others that haven't expired
+          if (data.senderId !== user.uid && expiry > now) {
+            // Check if this message was read
+            const otherUserId = data.participants.find((uid: string) => uid !== user.uid)
 
-          // Use state first, fallback to localStorage
-          const stateReadTime = lastReadTimes[otherUserId] || 0
-          const readKey = `lastRead_${user.uid}_${otherUserId}`
-          const storageReadTime = parseInt(localStorage.getItem(readKey) || '0', 10)
-          const lastReadTime = Math.max(stateReadTime, storageReadTime)
+            // Use state first, fallback to localStorage
+            const stateReadTime = lastReadTimes[otherUserId] || 0
+            const readKey = `lastRead_${user.uid}_${otherUserId}`
+            const storageReadTime = parseInt(localStorage.getItem(readKey) || '0', 10)
+            const lastReadTime = Math.max(stateReadTime, storageReadTime)
 
-          const messageTime = data.createdAt?.toMillis() || 0
+            const messageTime = data.createdAt?.toMillis() || 0
 
-          // Only count if message is newer than last read time
-          if (messageTime > lastReadTime) {
-            count++
+            // Only count if message is newer than last read time
+            if (messageTime > lastReadTime) {
+              count++
+            }
           }
-        }
-      })
+        })
 
-      setUnreadCount(count)
-    })
+        setUnreadCount(count)
+      },
+      error => {
+        console.error('Error fetching unread count:', error)
+      }
+    )
 
     return () => unsubscribe()
   }, [user, lastReadTimes])
@@ -165,29 +159,44 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     const q = query(
       collection(db, 'messages'),
-      where('participants', 'array-contains', user.uid),
-      orderBy('createdAt', 'asc')
+      where('participants', 'array-contains', user.uid)
+      // Removed orderBy to avoid composite index requirement
     )
 
-    const unsubscribe = onSnapshot(q, snapshot => {
-      const msgs: Message[] = []
-      const now = new Date().getTime()
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        const msgs: Message[] = []
+        const now = new Date().getTime()
 
-      snapshot.forEach(doc => {
-        const data = doc.data()
-        // Check if the other participant is the one we are talking to
-        if (data.participants.includes(activeChatUser.uid)) {
-          // Client-side expiry check (visual only logic as per plan)
-          const expiry = data.expiresAt?.toMillis() || 0
-          if (expiry > now) {
-            msgs.push({ id: doc.id, ...data } as Message)
+        snapshot.forEach(doc => {
+          const data = doc.data()
+          // Check if the other participant is the one we are talking to
+          if (data.participants.includes(activeChatUser.uid)) {
+            // Client-side expiry check (visual only logic as per plan)
+            const expiry = data.expiresAt?.toMillis() || 0
+            if (expiry > now) {
+              msgs.push({ id: doc.id, ...data } as Message)
+            }
           }
-        }
-      })
+        })
 
-      setMessages(msgs)
-      setLoading(false)
-    })
+        // Client-side sort
+        msgs.sort((a, b) => {
+          const tA = a.createdAt?.toMillis() || 0
+          const tB = b.createdAt?.toMillis() || 0
+          return tA - tB
+        })
+
+        setMessages(msgs)
+        setLoading(false)
+      },
+      error => {
+        console.error('Error fetching messages:', error)
+        toast.error('Failed to load messages')
+        setLoading(false)
+      }
+    )
 
     return () => unsubscribe()
   }, [user, activeChatUser, isOpen])
@@ -205,7 +214,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ChatContext.Provider
-      value={{ activeChatUser, isOpen, messages, loading, unreadCount, openChat, closeChat, sendMessage }}
+      value={{
+        activeChatUser,
+        isOpen,
+        messages,
+        loading,
+        unreadCount,
+        openChat,
+        closeChat,
+        sendMessage,
+      }}
     >
       {children}
     </ChatContext.Provider>
