@@ -27,7 +27,9 @@ export function ProtectedRoute() {
   // 2. Profile exists but onboarding not completed
   // Existing users with age set are grandfathered in
   const isOnboarded =
-    profile?.onboardingCompleted === true || (profile != null && profile.age != null)
+    profile?.onboardingCompleted === true ||
+    (profile != null && profile.age != null) ||
+    profile?.role === 'admin'
 
   if (!profile || !isOnboarded) {
     return <Navigate to="/onboarding" replace />

@@ -17,6 +17,8 @@ export interface UserProfile {
   onboardingCompleted?: boolean
   certifications?: string // Trainer credentials
   specialization?: string // Trainer area of expertise
+  goals?: string[] // User fitness goals
+  fitnessLevel?: 'beginner' | 'intermediate' | 'advanced' | 'elite' // User fitness level
   subscriptionTier?: 'free' | 'pro'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createdAt: any

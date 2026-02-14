@@ -36,8 +36,13 @@ export function DashboardLayout({ children, hideLogActivity = false }: Dashboard
       : [{ path: '/assigned-tasks', icon: 'assignment', label: 'Assigned Tasks' }]),
     { path: '/analytics', icon: 'trending_up', label: 'Analytics' },
     { path: '/upgrade', icon: 'bolt', label: 'Upgrade' },
-    // { path: '/settings', icon: 'tune', label: 'Settings' }, // Removed as it's in profile menu
+    // { path: '/settings', icon: 'tune', label: 'Settings' }, // Removed as it's z profile menu
   ]
+
+  // Add Admin Dashboard link for admins
+  if (profile?.role === 'admin') {
+    allNavItems.push({ path: '/admin', icon: 'admin_panel_settings', label: 'Admin Dashboard' })
+  }
 
   const navItems =
     hideLogActivity || profile?.role === 'trainer'

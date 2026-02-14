@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '@/features/auth/providers/AuthProvider'
+import { useAuth, UserProfile } from '@/features/auth/providers/AuthProvider'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,15 +19,20 @@ import toast from 'react-hot-toast'
 const profileSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters'),
   role: z.enum(['trainee', 'hiker', 'trainer']),
-  age: z.coerce.number().min(1, 'Age must be positive'),
-  weight: z.coerce.number().min(1, 'Weight must be positive'),
-  height: z.coerce.number().min(1, 'Height must be positive'),
+  age: z.coerce.number().min(0).optional(),
+  weight: z.coerce.number().min(0).optional(),
+  height: z.coerce.number().min(0).optional(),
+  // Trainer fields
+  certifications: z.string().optional(),
+  specialization: z.string().optional(),
+  // User fields
+  goals: z.string().optional(), // We'll handle this as a comma-separated string for simplicity in the UI
+  fitnessLevel: z.enum(['beginner', 'intermediate', 'advanced', 'elite']).optional(),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
-// const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
-// const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+// ... existing code ...
 
 export function ProfileSettings() {
   const { user, profile, refreshProfile } = useAuth()
@@ -84,6 +89,7 @@ export function ProfileSettings() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -93,8 +99,15 @@ export function ProfileSettings() {
       age: profile?.age || 0,
       weight: profile?.weight || 0,
       height: profile?.height || 0,
+      certifications: profile?.certifications || '',
+      specialization: profile?.specialization || '',
+      goals: profile?.goals?.join(', ') || '',
+      fitnessLevel: profile?.fitnessLevel || undefined,
     },
   })
+
+  // Watch role to conditionally show fields
+  const currentRole = watch('role')
 
   const onUpdateProfile = async (data: ProfileFormValues) => {
     if (!user) return
@@ -103,14 +116,31 @@ export function ProfileSettings() {
     const toastId = toast.loading('Updating profile...')
 
     try {
-      // Update Firestore Profile
-      await updateDoc(doc(db, 'users', user.uid), {
+      // Prepare update data
+      const updateData: Partial<UserProfile> = {
         displayName: data.displayName,
         role: data.role,
         age: data.age,
         weight: data.weight,
         height: data.height,
-      })
+      }
+
+      // Add role-specific fields
+      if (data.role === 'trainer') {
+        updateData.certifications = data.certifications
+        updateData.specialization = data.specialization
+      } else {
+        updateData.goals = data.goals
+          ? data.goals
+              .split(',')
+              .map(g => g.trim())
+              .filter(Boolean)
+          : []
+        updateData.fitnessLevel = data.fitnessLevel
+      }
+
+      // Update Firestore Profile
+      await updateDoc(doc(db, 'users', user.uid), updateData)
 
       // Update Auth Profile Display Name if changed
       if (data.displayName !== user.displayName) {
@@ -303,6 +333,66 @@ export function ProfileSettings() {
               </div>
             </div>
 
+            {/* Role Specific Fields */}
+            {currentRole === 'trainer' ? (
+              <div className="border-t border-white/10 pt-6 mt-6">
+                <h3 className="text-lg font-bold text-white mb-4">Trainer Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Specialization
+                    </label>
+                    <input
+                      {...register('specialization')}
+                      placeholder="e.g. Strength, Cardio, Yoga"
+                      className="w-full bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Certifications
+                    </label>
+                    <input
+                      {...register('certifications')}
+                      placeholder="e.g. NASM, ACE, ISSA"
+                      className="w-full bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="border-t border-white/10 pt-6 mt-6">
+                <h3 className="text-lg font-bold text-white mb-4">Fitness Profile</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Fitness Level
+                    </label>
+                    <select
+                      {...register('fitnessLevel')}
+                      className="w-full bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    >
+                      <option value="">Select Level...</option>
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                      <option value="elite">Elite</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                      Goals (comma separated)
+                    </label>
+                    <input
+                      {...register('goals')}
+                      placeholder="e.g. Lose weight, Build muscle, Run marathon"
+                      className="w-full bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -319,6 +409,8 @@ export function ProfileSettings() {
             </button>
           </form>
         </div>
+
+        {/* ... (Existing Trainee/Trainer Lists Logic) ... */}
 
         {/* Trainer/Trainee Section - Conditional Rendering */}
         {profile?.role === 'trainer' ? (

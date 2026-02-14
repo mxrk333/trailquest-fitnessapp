@@ -23,6 +23,11 @@ service cloud.firestore {
           || (userData.allowedTrainers != null && userData.allowedTrainers.hasAny([request.auth.token.email]));
     }
 
+    function isAdmin() {
+      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userData.role == 'admin';
+    }
+
     function isTrainerOfClient(clientId) {
       let clientData = get(/databases/$(database)/documents/users/$(clientId)).data;
       return clientData.trainerId == request.auth.uid ||
@@ -37,6 +42,9 @@ service cloud.firestore {
     // Users collection rules
     match /users/{userId} {
       allow read: if isSignedIn() && (
+        // 0. Admins can read all users
+        isAdmin() ||
+
         // 1. User reading their own profile
         isOwner(userId) || 
         
@@ -55,8 +63,8 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.pendingTrainerId == userId
       );
       
-      // Allow users to update only their own data
-      allow write: if isSignedIn() && isOwner(userId);
+      // Allow users to update only their own data, or admins to update any
+      allow write: if isSignedIn() && (isOwner(userId) || isAdmin());
     }
 
     // Workouts collection - trainers can read their clients' workouts and their assignments

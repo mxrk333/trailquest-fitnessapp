@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase'
-import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { UserProfile } from '@/features/auth/providers/AuthProvider'
 import { toast } from 'react-hot-toast'
@@ -26,6 +26,7 @@ export function AdminDashboard() {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
 
   const fetchData = async () => {
     try {
@@ -84,6 +85,46 @@ export function AdminDashboard() {
     }
   }
 
+  const handleDeleteUser = async (userId: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await deleteDoc(doc(db, 'users', userId))
+      toast.success(`Deleted user ${name}`)
+      fetchData()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error('Failed to delete user')
+    }
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser) return
+
+    try {
+      await updateDoc(doc(db, 'users', editingUser.uid), {
+        displayName: editingUser.displayName,
+        role: editingUser.role,
+        age: editingUser.age,
+        weight: editingUser.weight,
+        height: editingUser.height,
+        certifications: editingUser.certifications,
+        specialization: editingUser.specialization,
+        goals: editingUser.goals,
+        fitnessLevel: editingUser.fitnessLevel,
+      })
+      toast.success('User updated successfully')
+      setEditingUser(null)
+      fetchData()
+    } catch (error) {
+      console.error('Error updating user:', error)
+      toast.error('Failed to update user')
+    }
+  }
+
   const handleLogout = async () => {
     await logOut()
     navigate('/login')
@@ -118,7 +159,7 @@ export function AdminDashboard() {
   )
 
   return (
-    <div className="min-h-screen bg-background-dark text-white p-6">
+    <div className="min-h-screen bg-background-dark text-white p-6 relative">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <div>
@@ -238,8 +279,12 @@ export function AdminDashboard() {
                     <tr>
                       <th className="px-6 py-4">Name</th>
                       <th className="px-6 py-4">Email</th>
-                      <th className="px-6 py-4">Clients</th>
+                      <th className="px-6 py-4">Age</th>
+                      <th className="px-6 py-4">Weight (kg)</th>
+                      <th className="px-6 py-4">Height (cm)</th>
+                      <th className="px-6 py-4">Specialty</th>
                       <th className="px-6 py-4">Joined</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -249,11 +294,32 @@ export function AdminDashboard() {
                           {trainer.displayName || 'Unnamed'}
                         </td>
                         <td className="px-6 py-4 text-gray-400">{trainer.email}</td>
-                        <td className="px-6 py-4 text-gray-500">-</td>
+                        <td className="px-6 py-4 text-gray-400">{trainer.age || '-'}</td>
+                        <td className="px-6 py-4 text-gray-400">{trainer.weight || '-'}</td>
+                        <td className="px-6 py-4 text-gray-400">{trainer.height || '-'}</td>
+                        <td className="px-6 py-4 text-gray-400">{trainer.specialization || '-'}</td>
                         <td className="px-6 py-4 text-gray-500 text-sm">
                           {trainer.createdAt instanceof Timestamp
                             ? trainer.createdAt.toDate().toLocaleDateString()
                             : 'Unknown'}
+                        </td>
+                        <td className="px-6 py-4 text-right flex justify-end gap-2">
+                          <button
+                            onClick={() => setEditingUser(trainer)}
+                            className="p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <span className="material-icons text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteUser(trainer.uid, trainer.displayName || 'Trainer')
+                            }
+                            className="p-2 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <span className="material-icons text-lg">delete</span>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -278,7 +344,12 @@ export function AdminDashboard() {
                       <th className="px-6 py-4">Name</th>
                       <th className="px-6 py-4">Email</th>
                       <th className="px-6 py-4">Role</th>
+                      <th className="px-6 py-4">Age</th>
+                      <th className="px-6 py-4">Weight (kg)</th>
+                      <th className="px-6 py-4">Height (cm)</th>
+                      <th className="px-6 py-4">Level</th>
                       <th className="px-6 py-4">Joined</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -297,10 +368,32 @@ export function AdminDashboard() {
                             {user.role || 'User'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-gray-400">{user.age || '-'}</td>
+                        <td className="px-6 py-4 text-gray-400">{user.weight || '-'}</td>
+                        <td className="px-6 py-4 text-gray-400">{user.height || '-'}</td>
+                        <td className="px-6 py-4 text-gray-400 uppercase text-xs">
+                          {user.fitnessLevel || '-'}
+                        </td>
                         <td className="px-6 py-4 text-gray-500 text-sm">
                           {user.createdAt instanceof Timestamp
                             ? user.createdAt.toDate().toLocaleDateString()
                             : 'Unknown'}
+                        </td>
+                        <td className="px-6 py-4 text-right flex justify-end gap-2">
+                          <button
+                            onClick={() => setEditingUser(user)}
+                            className="p-2 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <span className="material-icons text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.uid, user.displayName || 'User')}
+                            className="p-2 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <span className="material-icons text-lg">delete</span>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -311,6 +404,181 @@ export function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-dark border border-white/10 rounded-2xl w-full max-w-md p-6 relative">
+            <button
+              onClick={() => setEditingUser(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <span className="material-icons">close</span>
+            </button>
+
+            <h2 className="text-xl font-bold mb-6">Edit User</h2>
+
+            <form onSubmit={handleUpdateUser} className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Display Name</label>
+                <input
+                  type="text"
+                  value={editingUser.displayName || ''}
+                  onChange={e => setEditingUser({ ...editingUser, displayName: e.target.value })}
+                  className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Role</label>
+                <select
+                  value={editingUser.role}
+                  onChange={e =>
+                    setEditingUser({ ...editingUser, role: e.target.value as UserProfile['role'] })
+                  }
+                  className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                >
+                  <option value="trainee">Trainee</option>
+                  <option value="hiker">Hiker</option>
+                  <option value="trainer">Trainer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Age</label>
+                  <input
+                    type="number"
+                    value={editingUser.age || ''}
+                    onChange={e =>
+                      setEditingUser({ ...editingUser, age: parseInt(e.target.value) || undefined })
+                    }
+                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Weight (kg)</label>
+                  <input
+                    type="number"
+                    value={editingUser.weight || ''}
+                    onChange={e =>
+                      setEditingUser({
+                        ...editingUser,
+                        weight: parseInt(e.target.value) || undefined,
+                      })
+                    }
+                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Height (cm)</label>
+                  <input
+                    type="number"
+                    value={editingUser.height || ''}
+                    onChange={e =>
+                      setEditingUser({
+                        ...editingUser,
+                        height: parseInt(e.target.value) || undefined,
+                      })
+                    }
+                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Role Specific Fields */}
+              {editingUser.role === 'trainer' && (
+                <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                  <div className="col-span-2">
+                    <label className="block text-sm text-gray-400 mb-1">Specialization</label>
+                    <input
+                      type="text"
+                      value={editingUser.specialization || ''}
+                      onChange={e =>
+                        setEditingUser({ ...editingUser, specialization: e.target.value })
+                      }
+                      placeholder="e.g. Strength, Cardio"
+                      className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm text-gray-400 mb-1">Certifications</label>
+                    <input
+                      type="text"
+                      value={editingUser.certifications || ''}
+                      onChange={e =>
+                        setEditingUser({ ...editingUser, certifications: e.target.value })
+                      }
+                      placeholder="e.g. NASM, ACE"
+                      className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(editingUser.role === 'trainee' || editingUser.role === 'hiker') && (
+                <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Fitness Level</label>
+                    <select
+                      value={editingUser.fitnessLevel || ''}
+                      onChange={e =>
+                        setEditingUser({
+                          ...editingUser,
+                          fitnessLevel: e.target.value as UserProfile['fitnessLevel'],
+                        })
+                      }
+                      className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                    >
+                      <option value="">Select...</option>
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                      <option value="elite">Elite</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Goals</label>
+                    <input
+                      type="text"
+                      value={
+                        Array.isArray(editingUser.goals)
+                          ? editingUser.goals.join(', ')
+                          : editingUser.goals || ''
+                      }
+                      onChange={e =>
+                        setEditingUser({
+                          ...editingUser,
+                          goals: e.target.value.split(',').map(s => s.trim()),
+                        })
+                      }
+                      placeholder="e.g. Weight loss"
+                      className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-primary text-background-dark font-bold hover:bg-primary/90 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
