@@ -1,30 +1,49 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { Signup } from './pages/Signup'
-import { Login } from './pages/Login'
-import { LogActivity } from './pages/LogActivity'
-import { AuthProvider } from './providers/AuthProvider'
-import { ChatProvider } from './providers/ChatProvider'
-import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { TrainerDashboard } from './pages/TrainerDashboard'
-import { ProfileSettings } from './pages/ProfileSettings'
-import { ClientDetailPage } from './pages/ClientDetailPage'
-import { AssignActivity } from './pages/AssignActivity'
-import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { ReadinessCard } from '@/components/dashboard/ReadinessCard'
-import { MuscleHeatmap } from '@/components/dashboard/MuscleHeatmap'
-import { DashboardFeed } from '@/components/dashboard/DashboardFeed'
-import { NutritionWidget } from '@/components/dashboard/NutritionWidget'
-import { AnalyticsPage } from './pages/AnalyticsPage'
-import { AssignedTasksPage } from './pages/AssignedTasksPage'
-import { TrainerAssignmentsPage } from './pages/TrainerAssignmentsPage'
-import { useAuth } from './providers/AuthProvider'
 import { Toaster } from 'react-hot-toast'
 
-const queryClient = new QueryClient()
+// Shared
+import { DashboardLayout } from '@/shared/components/layout/DashboardLayout'
+import { ProtectedRoute } from '@/shared/components/layout/ProtectedRoute'
 
-import { AdminDashboard } from './pages/AdminDashboard'
-import { PendingApproval } from './pages/PendingApproval'
+// Auth feature
+import { AuthProvider, useAuth } from '@/features/auth/providers/AuthProvider'
+import { Login } from '@/features/auth/pages/Login'
+import { Signup } from '@/features/auth/pages/Signup'
+
+// Chat feature
+import { ChatProvider } from '@/features/chat/providers/ChatProvider'
+
+// Onboarding feature
+import { Onboarding } from '@/features/onboarding/pages/Onboarding'
+
+// Dashboard feature
+import { ReadinessCard } from '@/features/dashboard/components/ReadinessCard'
+import { MuscleHeatmap } from '@/features/dashboard/components/MuscleHeatmap'
+import { DashboardFeed } from '@/features/dashboard/components/DashboardFeed'
+import { NutritionWidget } from '@/features/dashboard/components/NutritionWidget'
+
+// Activity feature
+import { LogActivity } from '@/features/activity/pages/LogActivity'
+import { AssignedTasksPage } from '@/features/activity/pages/AssignedTasksPage'
+
+// Trainer feature
+import { TrainerDashboard } from '@/features/trainer/pages/TrainerDashboard'
+import { ClientDetailPage } from '@/features/trainer/pages/ClientDetailPage'
+import { AssignActivity } from '@/features/trainer/pages/AssignActivity'
+import { TrainerAssignmentsPage } from '@/features/trainer/pages/TrainerAssignmentsPage'
+
+// Analytics feature
+import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage'
+
+// Admin feature
+import { AdminDashboard } from '@/features/admin/pages/AdminDashboard'
+import { PendingApproval } from '@/features/admin/pages/PendingApproval'
+
+// Settings feature
+import { ProfileSettings } from '@/features/settings/pages/ProfileSettings'
+
+const queryClient = new QueryClient()
 
 function Home() {
   const { profile } = useAuth()
@@ -101,6 +120,7 @@ export function App() {
 
             {/* Protected routes with Outlet */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route
                 path="/"
                 element={

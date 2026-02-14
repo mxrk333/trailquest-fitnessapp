@@ -16,6 +16,9 @@ export const UserSchema = z.object({
   age: z.number().optional(),
   weight: z.number().optional(),
   height: z.number().optional(),
+  onboardingCompleted: z.boolean().optional(), // Whether user has completed onboarding
+  certifications: z.string().optional(), // Trainer credentials (free-text)
+  specialization: z.string().optional(), // Trainer area of expertise
   createdAt: z.any(), // Firebase Timestamp
   updatedAt: z.any(),
 })
